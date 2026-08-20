@@ -1,0 +1,132 @@
+// ============================================================
+// BRAND CONFIG — the only file you need to edit per brand.
+// Duplicate this repo, change the values below, deploy.
+// Everything here can also be overridden at runtime from the
+// in-app Settings / Manage Lists screens (overrides are stored
+// in the data store and merged on top of these defaults).
+// ============================================================
+
+export default {
+  // ---- Identity ----------------------------------------------------
+  brandName: 'Enhanced Him',     // logo text, top-left
+  brandTagline: 'Creative Tracker', // small text next to the logo
+  accentColor: '#C9A54E',        // primary accent — gold from enhancedhim.com
+  accentColor2: '#DEB962',       // lighter gold for gradients
+
+  // Unique key per brand — keeps localStorage data separate when you
+  // run multiple brand deployments. Use a slug, e.g. 'acme'.
+  storageKey: 'enhancedhim',
+
+  // Shared access gate — required once per browser before the CRM opens.
+  accessPassword: 'Pancakes24+',
+
+  // ---- Team ---------------------------------------------------------
+  users: [
+    { name: 'Micah',   role: 'operator',            abbr: 'MI' },
+    { name: 'Vishal',  role: 'cfo',                 abbr: 'VI' },
+    { name: 'Tysin',   role: 'creative_strategist', abbr: 'TY' },
+    { name: 'Zain',    role: 'video_editor',        abbr: 'ZA' },
+    { name: 'Vlad',    role: 'media_buyer',         abbr: 'VL' },
+    { name: 'Damian',  role: 'media_buyer',         abbr: 'DA' },
+  ],
+
+  // Role definitions: label + which status lanes appear in "My Queue"
+  roles: {
+    operator:            { label: 'Operator',            queue: ['scripting', 'script_review', 'script_revision', 'assign_editor', 'needs_editing', 'needs_review', 'needs_revision', 'ugc_content_needed', 'ugc_content_review', 'ugc_content_approved', 'ugc_content_revision', 'ready_to_launch'] },
+    cfo:                 { label: 'Chief Fun Officer',   queue: ['script_review', 'scripting', 'script_revision', 'assign_editor', 'needs_editing', 'needs_review', 'needs_revision', 'ugc_content_needed', 'ugc_content_review', 'ugc_content_approved', 'ugc_content_revision', 'ready_to_launch'] },
+    creative_strategist: { label: 'Creative Strategist', queue: ['scripting', 'assign_editor', 'needs_review', 'ugc_content_review', 'ugc_content_revision'] },
+    video_editor:        { label: 'Video Editor',        queue: ['needs_editing', 'needs_revision'] },
+    media_buyer:         { label: 'Media Buyer',         queue: ['ready_to_launch'] },
+  },
+
+  // Brief title convention: (Role), Batch, (Batch Number)
+  // e.g. "Tysin, Batch, 1" or "Zain, Batch, 3"
+
+  // ---- Brief fields (option lists; editable in Manage Lists) --------
+  fieldLabels: {
+    persona: 'Persona',
+    awarenessStage: 'Awareness Stage',
+    type: 'Format',
+    page: 'Facebook Page',
+    landingPage: 'Landing Page',
+    adConcept: 'Ad Concept',
+    angle: 'Angle',
+    formatType: 'Format Type',
+    postId: 'Post ID',
+    learnings: 'Learnings',
+    scriptLink: 'Script / Brief Link',
+    finalVideoLink: 'Final Asset Link',
+    ugcAssetsLink: 'UGC Assets Link',
+  },
+
+  personas: ['Persona X', 'Persona Y', 'Persona Z'],
+  awarenessStages: ['TOF', 'MOF', 'BOF'],
+  types: ['Video', 'Static', 'Native', 'GIF'],
+  pages: ['Main Page', 'Review Page', 'Founder Page'],
+  landingPages: ['PDP', 'Advertorial', 'Quiz', 'Listicle'],
+  results: ['Testing', 'Winner', 'KPI Winner', 'Needs Iteration', 'Loser'],
+
+  // ---- Workflow ------------------------------------------------------
+  // Statuses with display labels + lane colors. Keys are stable IDs —
+  // rename labels freely; only change keys if you also update
+  // transitions + role queues.
+  statuses: {
+    scripting:            { label: 'Scripting',            color: '#94a3b8' },
+    script_review:        { label: 'Script Review',        color: '#a78bfa' },
+    script_revision:      { label: 'Script Revision',      color: '#f43f5e' },
+    assign_editor:        { label: 'Assigned to Editor',   color: '#fb923c' },
+    needs_editing:        { label: 'Needs Editing',        color: '#f59e0b' },
+    needs_review:         { label: 'Needs Review',         color: '#ec4899' },
+    needs_revision:       { label: 'Needs Revision',       color: '#ef4444' },
+    ugc_content_needed:   { label: 'UGC Content Needed',   color: '#06b6d4' },
+    ugc_content_review:   { label: 'UGC Content Review',   color: '#8b5cf6' },
+    ugc_content_approved: { label: 'UGC Content Approved', color: '#10b981' },
+    ugc_content_revision: { label: 'UGC Content Revision', color: '#f97316' },
+    ready_to_launch:      { label: 'Ready to Launch',      color: '#22c55e' },
+    launched:             { label: 'Launched',             color: '#3b82f6' },
+  },
+
+  // Allowed moves out of each status.
+  //  needsAssignment + assignRoles: prompts to pick an assignee
+  //  needsNote: prompts for a revision note (saved to history)
+  transitions: {
+    scripting: [
+      { to: 'script_review', label: 'Submit for Review' },
+      { to: 'ugc_content_needed', label: 'Request UGC Content' },
+    ],
+    script_review: [
+      { to: 'assign_editor', label: 'Approve' },
+      { to: 'script_revision', label: 'Request Revision', needsNote: true, noteLabel: 'Comments', notePlaceholder: 'What needs to change in the script…', confirmLabel: 'Submit' },
+    ],
+    script_revision: [{ to: 'script_review', label: 'Resubmit for Review' }],
+    assign_editor: [
+      { to: 'needs_editing', label: 'Assign to Editor', needsAssignment: true, assignRoles: ['video_editor'] },
+    ],
+    needs_editing: [{ to: 'needs_review', label: 'Submit for Review' }],
+    needs_review: [
+      { to: 'ready_to_launch', label: 'Approve' },
+      { to: 'needs_revision', label: 'Request Revision', needsNote: true },
+    ],
+    needs_revision: [{ to: 'needs_review', label: 'Resubmit for Review' }],
+    ugc_content_needed: [{ to: 'ugc_content_review', label: 'Submit for Review' }],
+    ugc_content_review: [
+      { to: 'ugc_content_approved', label: 'Approve UGC' },
+      { to: 'ugc_content_revision', label: 'Request Revision', needsNote: true },
+    ],
+    ugc_content_approved: [
+      { to: 'needs_editing', label: 'Send to Editor', needsAssignment: true, assignRoles: ['video_editor'] },
+    ],
+    ugc_content_revision: [{ to: 'ugc_content_review', label: 'Resubmit for Review' }],
+    ready_to_launch: [{ to: 'launched', label: 'Mark as Launched' }],
+    launched: [],
+  },
+
+  // ---- Optional: Supabase team sync -----------------------------------
+  // Leave url/anonKey empty to run on localStorage (per-browser data).
+  // Fill them in to share one live board across the whole team.
+  // See README.md for the 10-minute setup.
+  supabase: {
+    url: 'https://yibdrbqcdhvyfgtfjhni.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpYmRyYnFjZGh2eWZndGZqaG5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMzI5MDgsImV4cCI6MjA5NjgwODkwOH0.NxGFjqHcq2a6lWBjrO_gHX8EPLvnXimcUCOdTIhD9No',
+  },
+}
