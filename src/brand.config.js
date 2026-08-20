@@ -17,7 +17,7 @@ export default {
   // run multiple brand deployments. Use a slug, e.g. 'acme'.
   storageKey: 'enhancedhim',
 
-  // Shared access gate — required once per browser before the CRM opens.
+  // Shared access gate — entered once per browser/device, then remembered locally.
   accessPassword: 'Pancakes24+',
 
   // ---- Team ---------------------------------------------------------

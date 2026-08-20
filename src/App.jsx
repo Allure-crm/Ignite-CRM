@@ -17,8 +17,8 @@ export default function App() {
   const [briefs, setBriefs] = useState([])
   const [overrides, setOverrides] = useState({})
   const [intakes, setIntakes] = useState([])
-  const [user, setUser] = useState(loadUser())
-  const [unlocked, setUnlocked] = useState(loadUnlocked)
+  const [user, setUser] = useState(() => loadUser())
+  const [unlocked, setUnlocked] = useState(() => loadUnlocked())
   const [view, setView] = useState(null) // status key | 'all' | 'launched'
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null) // {kind, ...}

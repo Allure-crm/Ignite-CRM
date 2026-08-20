@@ -12,6 +12,45 @@ const LS_BRIEFS = `${config.storageKey}_crm_briefs`
 const LS_OVERRIDES = `${config.storageKey}_crm_overrides`
 const LS_USER = `${config.storageKey}_crm_user`
 const LS_UNLOCKED = `${config.storageKey}_crm_unlocked`
+const PERSIST_SECONDS = 60 * 60 * 24 * 365
+
+function cookieSafeName(name) {
+  return name.replace(/[^a-zA-Z0-9_-]/g, '_')
+}
+
+function writePersistent(key, value) {
+  try { localStorage.setItem(key, value) } catch {}
+  if (typeof document === 'undefined') return
+  const secure = typeof location !== 'undefined' && location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `${cookieSafeName(key)}=${encodeURIComponent(value)}; Max-Age=${PERSIST_SECONDS}; Path=/; SameSite=Lax${secure}`
+}
+
+function readPersistent(key) {
+  try {
+    const stored = localStorage.getItem(key)
+    if (stored != null && stored !== '') return stored
+  } catch {}
+  if (typeof document === 'undefined') return null
+  const name = cookieSafeName(key)
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function clearPersistent(key) {
+  try { localStorage.removeItem(key) } catch {}
+  if (typeof document === 'undefined') return
+  document.cookie = `${cookieSafeName(key)}=; Max-Age=0; Path=/`
+}
+
+function unlockToken() {
+  const password = String(config.accessPassword || '')
+  let hash = 2166136261
+  for (let i = 0; i < password.length; i++) {
+    hash ^= password.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return `v1_${(hash >>> 0).toString(16)}`
+}
 
 const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {}
 
@@ -38,20 +77,33 @@ async function client() {
   return sb
 }
 
-// ---------- current user (always local to the browser) ----------
+// ---------- current user + access gate (always local to this browser) ----------
 export function loadUser() {
-  try { return JSON.parse(localStorage.getItem(LS_USER)) } catch { return null }
+  try {
+    const raw = readPersistent(LS_USER)
+    if (!raw || raw === 'null') return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
 }
 export function saveUser(user) {
-  localStorage.setItem(LS_USER, JSON.stringify(user))
+  if (!user) {
+    clearPersistent(LS_USER)
+    return
+  }
+  writePersistent(LS_USER, JSON.stringify(user))
 }
 
 export function loadUnlocked() {
-  return localStorage.getItem(LS_UNLOCKED) === '1'
+  const saved = readPersistent(LS_UNLOCKED)
+  const ok = saved === unlockToken() || saved === '1'
+  if (ok) writePersistent(LS_UNLOCKED, unlockToken())
+  return ok
 }
 
 export function saveUnlocked() {
-  localStorage.setItem(LS_UNLOCKED, '1')
+  writePersistent(LS_UNLOCKED, unlockToken())
 }
 
 const LS_INTAKES = `${config.storageKey}_crm_intakes`
