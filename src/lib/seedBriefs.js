@@ -2,7 +2,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #1',
     batchNumber: 1,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-03',
     type: 'Video',
     formatType: 'AI Animated',
@@ -20,7 +20,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #2',
     batchNumber: 2,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-03',
     type: 'Video',
     formatType: 'AI Animated',
@@ -38,7 +38,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #3',
     batchNumber: 3,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-03',
     type: 'Video',
     formatType: 'UGC-Style',
@@ -56,7 +56,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #4',
     batchNumber: 4,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-03',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -74,7 +74,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #5',
     batchNumber: 5,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-04',
     type: 'Video',
     formatType: 'AI Animated',
@@ -92,7 +92,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #6',
     batchNumber: 6,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-04',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -110,7 +110,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #7',
     batchNumber: 7,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-04',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -128,7 +128,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #8',
     batchNumber: 8,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-04',
     type: 'Video',
     formatType: 'Podcast-Reaction + Narrator',
@@ -146,7 +146,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #9',
     batchNumber: 9,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-04',
     type: 'Video',
     formatType: 'Podcast-Reaction + Narrator',
@@ -164,7 +164,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #10',
     batchNumber: 10,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-04',
     type: 'Static',
     formatType: 'Native story',
@@ -182,7 +182,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #11',
     batchNumber: 11,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-05',
     type: 'Native',
     formatType: 'native story',
@@ -200,7 +200,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #12',
     batchNumber: 12,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-05',
     type: 'Video',
     formatType: 'UGC-Style',
@@ -218,7 +218,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #13',
     batchNumber: 13,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-05',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -236,7 +236,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #14',
     batchNumber: 14,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-05',
     type: 'Static',
     formatType: 'Problem-Agitation',
@@ -254,7 +254,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #15',
     batchNumber: 15,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-05',
     type: 'Video',
     formatType: 'AI Animated',
@@ -272,7 +272,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #16',
     batchNumber: 16,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-06',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -290,7 +290,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #17',
     batchNumber: 17,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-06',
     type: 'Video',
     formatType: 'UGC-Style',
@@ -308,7 +308,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #18',
     batchNumber: 18,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-06',
     type: 'Video',
     formatType: 'Podcast-Reaction + Narrator',
@@ -326,7 +326,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #19',
     batchNumber: 19,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-06',
     type: 'Video',
     formatType: 'UGC-Style',
@@ -344,7 +344,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #20',
     batchNumber: 20,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-06',
     type: 'Video',
     formatType: 'AI Animated',
@@ -362,7 +362,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #21',
     batchNumber: 21,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-06',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -380,7 +380,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #22',
     batchNumber: 22,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-07',
     type: 'Native',
     formatType: 'Long-Form Story',
@@ -398,7 +398,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #23',
     batchNumber: 23,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-07',
     type: 'Native',
     formatType: 'Long-Form Story',
@@ -416,7 +416,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #24',
     batchNumber: 24,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-07',
     type: 'Native',
     formatType: 'Long-Form Story',
@@ -434,7 +434,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #25',
     batchNumber: 25,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-08',
     type: 'Native',
     formatType: 'Long-Form Story',
@@ -452,7 +452,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #26',
     batchNumber: 26,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-09',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -470,7 +470,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #27',
     batchNumber: 27,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-09',
     type: 'Video',
     formatType: 'Podcast-Reaction + Narrator',
@@ -488,7 +488,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #28',
     batchNumber: 28,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-09',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -506,7 +506,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #29',
     batchNumber: 29,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-09',
     type: 'Video',
     formatType: 'AI Animated',
@@ -524,7 +524,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #30',
     batchNumber: 30,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-11',
     type: 'Video',
     formatType: 'AI Animated',
@@ -542,7 +542,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #31',
     batchNumber: 31,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-10',
     type: 'Video',
     formatType: 'AI Animated',
@@ -560,7 +560,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #32',
     batchNumber: 32,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-10',
     type: 'Video',
     formatType: 'AI Animated',
@@ -578,7 +578,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #33',
     batchNumber: 33,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-11',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -596,7 +596,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #34',
     batchNumber: 34,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-11',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -614,7 +614,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #35',
     batchNumber: 35,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-11',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -632,7 +632,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #36',
     batchNumber: 36,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-11',
     type: 'Video',
     formatType: 'UGC-Style',
@@ -650,7 +650,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #37',
     batchNumber: 37,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-11',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -668,7 +668,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #38',
     batchNumber: 38,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-12',
     type: 'Video',
     formatType: 'AI Animated',
@@ -686,7 +686,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #39',
     batchNumber: 39,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-12',
     type: 'Native',
     formatType: 'Long-Form Story',
@@ -704,7 +704,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #40',
     batchNumber: 40,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-12',
     type: 'Video',
     formatType: 'UGC-Style',
@@ -722,7 +722,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #41',
     batchNumber: 41,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-15',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -740,7 +740,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #42',
     batchNumber: 42,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-15',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -758,7 +758,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #43',
     batchNumber: 43,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-15',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -776,7 +776,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #44',
     batchNumber: 44,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-16',
     type: 'Video',
     formatType: 'AO Animated',
@@ -794,7 +794,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #45',
     batchNumber: 45,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-16',
     type: 'Video',
     formatType: 'AI Animated',
@@ -812,7 +812,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #46',
     batchNumber: 46,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-16',
     type: 'Video',
     formatType: 'AI Animated',
@@ -830,7 +830,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #47',
     batchNumber: 47,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-17',
     type: 'Native',
     formatType: 'Long Form Story',
@@ -848,7 +848,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #48',
     batchNumber: 48,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-17',
     type: 'Video',
     formatType: 'AI Podcast',
@@ -866,7 +866,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #49',
     batchNumber: 49,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-17',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -884,7 +884,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #50',
     batchNumber: 50,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-18',
     type: 'Video',
     formatType: 'AI UGC Podcast',
@@ -902,7 +902,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #51',
     batchNumber: 51,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-18',
     type: 'Video',
     formatType: 'AI UGC Podcast',
@@ -920,7 +920,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #52',
     batchNumber: 52,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-17',
     type: 'Static',
     formatType: 'Headline Test',
@@ -938,7 +938,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #53',
     batchNumber: 53,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-17',
     type: 'Static',
     formatType: 'Female holding bottle',
@@ -956,7 +956,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #54',
     batchNumber: 54,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-17',
     type: 'Static',
     formatType: 'Female holding bottle',
@@ -974,7 +974,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #55',
     batchNumber: 55,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-18',
     type: 'Video',
     formatType: 'AI Animated',
@@ -992,7 +992,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #56',
     batchNumber: 56,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-18',
     type: 'Video',
     formatType: 'AI Animated',
@@ -1010,7 +1010,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #57',
     batchNumber: 57,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-16',
     type: 'Video',
     formatType: 'Broll + VO',
@@ -1028,7 +1028,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #58',
     batchNumber: 58,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-19',
     type: 'Video',
     formatType: 'AI Animated',
@@ -1046,7 +1046,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #59',
     batchNumber: 59,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-19',
     type: 'Video',
     formatType: 'AI Animated',
@@ -1064,7 +1064,7 @@ export const seedBriefs = [
   {
     name: 'TYS Batch #60',
     batchNumber: 60,
-    strategist: 'Tysin',
+    strategist: 'Mia',
     date: '2026-06-19',
     type: 'Video',
     formatType: 'AI Animated',

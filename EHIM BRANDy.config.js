@@ -21,7 +21,7 @@ export default {
   users: [
     { name: 'Micah',   role: 'operator',            abbr: 'MI' },
     { name: 'Vishal',  role: 'cfo',                 abbr: 'VI' },
-    { name: 'Tysin',   role: 'creative_strategist', abbr: 'TY' },
+    { name: 'Mia',     role: 'creative_strategist', abbr: 'MA' },
     { name: 'Zain',    role: 'video_editor',        abbr: 'ZA' },
     { name: 'Vlad',    role: 'media_buyer',         abbr: 'VL' },
     { name: 'Damian',  role: 'media_buyer',         abbr: 'DA' },
@@ -37,7 +37,7 @@ export default {
   },
 
   // Brief title convention: (Role), Batch, (Batch Number)
-  // e.g. "Tysin, Batch, 1" or "Zain, Batch, 3"
+  // e.g. "Mia, Batch, 1" or "Zain, Batch, 3"
 
   // ---- Brief fields (option lists; editable in Manage Lists) --------
   fieldLabels: {
