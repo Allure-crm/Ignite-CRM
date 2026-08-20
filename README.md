@@ -27,7 +27,7 @@ npm run dev
 
 1. Duplicate this folder (or the GitHub repo).
 2. Edit `src/brand.config.js` — name, colors, team, personas, pages. Give it a unique `storageKey`.
-3. Push to GitHub and import into [Vercel](https://vercel.com/new) (framework preset: Vite). Or run `npm run build` and drag the `dist/` folder into Netlify.
+3. Push to GitHub and import into [Vercel](https://vercel.com/new). The repo root is a Vite app (`package.json` + `vite.config.js` + `vercel.json`), so Vercel should detect the **Vite** preset automatically. Or run `npm run build` and deploy the `dist/` folder (Netlify, Cloudflare Pages, etc.).
 
 That's it — the app now runs in **localStorage mode**: zero setup, but each person's browser keeps its own data.
 
