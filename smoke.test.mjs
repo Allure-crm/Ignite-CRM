@@ -1,6 +1,7 @@
 // Workflow smoke test — run with: node smoke.test.mjs
 // Validates the brand.config workflow definition after you customize it.
 import { briefName, nextBriefNumber, applyTransition, mergedConfig } from './src/lib/helpers.js'
+import { resolveSupabaseCreds, postgresUrl } from './src/lib/supabaseEnv.js'
 import config from './src/brand.config.js'
 
 const n = briefName({ abbr: 'TY', date: '2026-06-01', briefNumber: 2, persona: 'Persona A', awarenessStage: 'TOF', type: 'Static', landingPage: 'PDP' })
@@ -45,5 +46,14 @@ for (const [role, def] of Object.entries(config.roles))
 
 const m = mergedConfig({ brandName: 'ACME', personas: ['P1'] })
 console.assert(m.brandName === 'ACME' && m.personas[0] === 'P1' && m.statuses.scripting, 'merge FAILED')
+
+const mapped = resolveSupabaseCreds({
+  NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'sb_publishable_test',
+})
+console.assert(mapped.url === 'https://example.supabase.co' && mapped.anonKey === 'sb_publishable_test', 'marketplace env mapping FAILED')
+console.assert(resolveSupabaseCreds({}).url === '' && !resolveSupabaseCreds({}).anonKey, 'empty creds FAILED')
+console.assert(postgresUrl({ POSTGRES_URL: 'postgres://x' }) === 'postgres://x', 'postgres url FAILED')
+console.assert(!config.supabase.url && !config.supabase.anonKey, 'brand config should not ship supabase keys')
 
 console.log('ALL SMOKE TESTS PASSED — path:', ['scripting', ...path].join(' > '))

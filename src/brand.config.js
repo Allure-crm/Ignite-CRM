@@ -122,9 +122,9 @@ export default {
   },
 
   // ---- Optional: Supabase team sync -----------------------------------
-  // Prefer VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local
-  // (and the same names in Vercel). These fields are a fallback only.
-  // Leave them empty to run on localStorage (per-browser data).
+  // Prefer env vars (VITE_SUPABASE_* or Vercel Marketplace NEXT_PUBLIC_SUPABASE_* /
+  // SUPABASE_*). These fields are a fallback only. Leave them empty so keys
+  // are not committed to git. Empty + no env vars = localStorage (per-browser data).
   supabase: {
     url: '',
     anonKey: '',

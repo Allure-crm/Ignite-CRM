@@ -7,6 +7,7 @@
 //   subscribe(onChange)  -> realtime updates (supabase mode only)
 
 import config from '../brand.config.js'
+import { resolveSupabaseCreds } from './supabaseEnv.js'
 
 const LS_BRIEFS = `${config.storageKey}_crm_briefs`
 const LS_OVERRIDES = `${config.storageKey}_crm_overrides`
@@ -55,9 +56,7 @@ function unlockToken() {
 const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {}
 
 export function supabaseCreds() {
-  const url = String(env.VITE_SUPABASE_URL || config.supabase?.url || '').trim()
-  const anonKey = String(env.VITE_SUPABASE_ANON_KEY || config.supabase?.anonKey || '').trim()
-  return { url, anonKey }
+  return resolveSupabaseCreds(env, config.supabase || {})
 }
 
 export const isSupabase = Boolean(supabaseCreds().url && supabaseCreds().anonKey)
