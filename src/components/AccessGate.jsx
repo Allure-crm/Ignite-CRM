@@ -26,7 +26,7 @@ export default function AccessGate({ config, onUnlock }) {
         </div>
         <form onSubmit={submit}>
           <div className="modal-body">
-            <p className="access-copy">Enter the team password to open the CRM.</p>
+            <p className="access-copy">Enter the team password once on this device. You will stay signed in here until you clear this browser.</p>
             <div className="field">
               <label>Password</label>
               <input
