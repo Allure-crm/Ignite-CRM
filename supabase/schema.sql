@@ -1,5 +1,6 @@
 -- Universal Creative CRM — Supabase schema
 -- Run this in the SQL Editor of a new Supabase project (one project per brand).
+-- Safe to run more than once.
 
 create table if not exists briefs (
   id uuid primary key,
@@ -13,13 +14,27 @@ create table if not exists settings (
 );
 
 -- Realtime sync so the whole team sees updates live
-alter publication supabase_realtime add table briefs;
-alter publication supabase_realtime add table settings;
+do $$
+begin
+  alter publication supabase_realtime add table briefs;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table settings;
+exception
+  when duplicate_object then null;
+end $$;
 
 -- This is an internal tool gated by the anon key (not a public product),
 -- so policies are permissive. Don't share the project URL/key outside the team.
 alter table briefs enable row level security;
 alter table settings enable row level security;
 
+drop policy if exists "team access briefs" on briefs;
 create policy "team access briefs" on briefs for all using (true) with check (true);
+
+drop policy if exists "team access settings" on settings;
 create policy "team access settings" on settings for all using (true) with check (true);

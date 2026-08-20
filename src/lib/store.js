@@ -13,13 +13,27 @@ const LS_OVERRIDES = `${config.storageKey}_crm_overrides`
 const LS_USER = `${config.storageKey}_crm_user`
 const LS_UNLOCKED = `${config.storageKey}_crm_unlocked`
 
-export const isSupabase = Boolean(config.supabase?.url && config.supabase?.anonKey)
+const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {}
+
+export function supabaseCreds() {
+  const url = String(env.VITE_SUPABASE_URL || config.supabase?.url || '').trim()
+  const anonKey = String(env.VITE_SUPABASE_ANON_KEY || config.supabase?.anonKey || '').trim()
+  return { url, anonKey }
+}
+
+export const isSupabase = Boolean(supabaseCreds().url && supabaseCreds().anonKey)
+
+function fail(action, error) {
+  const message = error?.message || String(error)
+  throw new Error(`${action}: ${message}`)
+}
 
 let sb = null
 async function client() {
   if (!sb) {
+    const { url, anonKey } = supabaseCreds()
     const { createClient } = await import('@supabase/supabase-js')
-    sb = createClient(config.supabase.url, config.supabase.anonKey)
+    sb = createClient(url, anonKey)
   }
   return sb
 }
@@ -77,7 +91,9 @@ const remote = {
       c.from('settings').select('key, data').eq('key', 'overrides').maybeSingle(),
       c.from('settings').select('key, data').eq('key', 'intakes').maybeSingle(),
     ])
-    if (b.error) throw new Error('Supabase briefs: ' + b.error.message)
+    if (b.error) fail('Load briefs', b.error)
+    if (s.error) fail('Load settings', s.error)
+    if (intk.error) fail('Load intakes', intk.error)
     return {
       briefs: (b.data || []).map((r) => r.data),
       overrides: s.data?.data || {},
@@ -87,22 +103,22 @@ const remote = {
   async upsertBrief(brief) {
     const c = await client()
     const { error } = await c.from('briefs').upsert({ id: brief.id, data: brief, updated_at: new Date().toISOString() })
-    if (error) console.error('upsertBrief', error)
+    if (error) fail('Save brief', error)
   },
   async deleteBrief(id) {
     const c = await client()
     const { error } = await c.from('briefs').delete().eq('id', id)
-    if (error) console.error('deleteBrief', error)
+    if (error) fail('Delete brief', error)
   },
   async saveOverrides(overrides) {
     const c = await client()
     const { error } = await c.from('settings').upsert({ key: 'overrides', data: overrides })
-    if (error) console.error('saveOverrides', error)
+    if (error) fail('Save lists', error)
   },
   async saveIntake(entry, allIntakes) {
     const c = await client()
     const { error } = await c.from('settings').upsert({ key: 'intakes', data: allIntakes })
-    if (error) console.error('saveIntake', error)
+    if (error) fail('Save intake', error)
   },
   subscribe(onChange) {
     let channel

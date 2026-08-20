@@ -38,8 +38,8 @@ localStorage mode means your editor and your media buyer each see their *own* co
 1. Create a free project at [supabase.com](https://supabase.com) (one project per brand).
 2. Open **SQL Editor**, paste the contents of `supabase/schema.sql`, run it.
 3. In **Project Settings → API**, copy the Project URL and the `anon` public key.
-4. Paste both into the `supabase` section of `src/brand.config.js`.
-5. Redeploy.
+4. Put them in `.env.local` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (see `.env.example`). For production, add the same names in the Vercel project env vars.
+5. Redeploy / restart `npm run dev`. The sidebar should say **Data: Supabase (team sync)**.
 
 The board is now shared and updates in realtime for everyone. Note: the anon key gates access — treat the deployed URL as internal and don't post it publicly. If you need real authentication later, Supabase Auth can be added on top.
 

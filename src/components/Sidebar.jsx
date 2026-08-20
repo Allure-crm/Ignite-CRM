@@ -1,6 +1,6 @@
 const TRACKER_ROLES = ['operator', 'creative_strategist', 'cfo']
 
-export default function Sidebar({ config, user, view, briefs, onView, onNewBrief, onManageLists, onSwitchUser, isSupabase }) {
+export default function Sidebar({ config, user, view, briefs, onView, onNewBrief, onManageLists, onSwitchUser, isSupabase, storeError }) {
   const queue = config.roles[user.role]?.queue || []
   const countFor = (status) => briefs.filter((b) => b.status === status).length
   const launchedCount = briefs.filter((b) => b.status === 'launched').length
@@ -67,6 +67,9 @@ export default function Sidebar({ config, user, view, briefs, onView, onNewBrief
         <div className="sync-banner">
           Data: <b>{isSupabase ? 'Supabase (team sync)' : 'this browser only'}</b>
         </div>
+        {storeError && (
+          <div className="store-error" role="alert">{storeError}</div>
+        )}
       </div>
     </aside>
   )

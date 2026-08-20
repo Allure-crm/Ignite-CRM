@@ -23,6 +23,7 @@ export default function App() {
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null) // {kind, ...}
   const [loaded, setLoaded] = useState(false)
+  const [storeError, setStoreError] = useState('')
 
   const config = useMemo(() => mergedConfig(overrides), [overrides])
 
@@ -31,8 +32,13 @@ export default function App() {
       setBriefs(briefs)
       setOverrides(overrides)
       setIntakes(intakes || [])
+      setStoreError('')
       setLoaded(true)
-    }).catch((e) => { console.error(e); setLoaded(true) })
+    }).catch((e) => {
+      console.error(e)
+      setStoreError(e.message || String(e))
+      setLoaded(true)
+    })
   }, [])
 
   useEffect(() => {
@@ -55,30 +61,41 @@ export default function App() {
     if (user && !view) setView(config.roles[user.role]?.queue?.[0] || 'all')
   }, [user, view, config])
 
+  const persist = async (action) => {
+    try {
+      await action()
+      setStoreError('')
+    } catch (e) {
+      console.error(e)
+      setStoreError(e.message || String(e))
+      refresh()
+    }
+  }
+
   const upsert = async (brief) => {
     const exists = briefs.some((b) => b.id === brief.id)
     const all = exists ? briefs.map((b) => (b.id === brief.id ? brief : b)) : [...briefs, brief]
     setBriefs(all)
-    await store.upsertBrief(brief, all)
+    await persist(() => store.upsertBrief(brief, all))
   }
 
   const removeBrief = async (id) => {
     const all = briefs.filter((b) => b.id !== id)
     setBriefs(all)
-    await store.deleteBrief(id, all)
+    await persist(() => store.deleteBrief(id, all))
     setModal(null)
   }
 
   const saveOverrides = async (next) => {
     setOverrides(next)
-    await store.saveOverrides(next)
+    await persist(() => store.saveOverrides(next))
   }
 
   const saveIntake = async (entry) => {
     const exists = intakes.some((e) => e.weekOf === entry.weekOf)
     const all = exists ? intakes.map((e) => (e.weekOf === entry.weekOf ? entry : e)) : [...intakes, entry]
     setIntakes(all)
-    await store.saveIntake(entry, all)
+    await persist(() => store.saveIntake(entry, all))
   }
 
   const runAction = (brief, transition) => {
@@ -110,10 +127,18 @@ export default function App() {
 
   if (!user) {
     return (
-      <SwitchUser
-        config={config}
-        onPick={(u) => { saveUser(u); setUser(u); setView(null) }}
-      />
+      <>
+        {storeError && (
+          <div className="empty-state">
+            <h3>Could not load from Supabase</h3>
+            <p>{storeError}</p>
+          </div>
+        )}
+        <SwitchUser
+          config={config}
+          onPick={(u) => { saveUser(u); setUser(u); setView(null) }}
+        />
+      </>
     )
   }
 
@@ -129,6 +154,7 @@ export default function App() {
         onManageLists={() => setModal({ kind: 'lists' })}
         onSwitchUser={() => { saveUser(null); setUser(null) }}
         isSupabase={isSupabase}
+        storeError={storeError}
       />
       {view === 'summary' ? (
         <Overview

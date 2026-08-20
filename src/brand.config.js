@@ -122,11 +122,11 @@ export default {
   },
 
   // ---- Optional: Supabase team sync -----------------------------------
-  // Leave url/anonKey empty to run on localStorage (per-browser data).
-  // Fill them in to share one live board across the whole team.
-  // See README.md for the 10-minute setup.
+  // Prefer VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local
+  // (and the same names in Vercel). These fields are a fallback only.
+  // Leave them empty to run on localStorage (per-browser data).
   supabase: {
-    url: 'https://yibdrbqcdhvyfgtfjhni.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpYmRyYnFjZGh2eWZndGZqaG5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMzI5MDgsImV4cCI6MjA5NjgwODkwOH0.NxGFjqHcq2a6lWBjrO_gHX8EPLvnXimcUCOdTIhD9No',
+    url: '',
+    anonKey: '',
   },
 }
