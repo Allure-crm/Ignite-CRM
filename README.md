@@ -31,17 +31,26 @@ npm run dev
 
 That's it — the app now runs in **localStorage mode**: zero setup, but each person's browser keeps its own data.
 
-## Enable team sync (Supabase, ~10 minutes per brand)
+## Enable team sync (Supabase)
 
-localStorage mode means your editor and your media buyer each see their *own* copy of the board. For a real shared board:
+localStorage mode means your editor and your media buyer each see their *own* copy of the board. For a real shared board the app needs a Supabase project **and** a production rebuild after the keys are available.
 
-1. Create a free project at [supabase.com](https://supabase.com) (one project per brand).
-2. Open **SQL Editor**, paste the contents of `supabase/schema.sql`, run it.
-3. In **Project Settings → API**, copy the Project URL and the `anon` public key.
-4. Put them in `.env.local` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (see `.env.example`). For production, add the same names in the Vercel project env vars.
-5. Redeploy / restart `npm run dev`. The sidebar should say **Data: Supabase (team sync)**.
+### Option A — add Supabase from the Vercel dashboard (Marketplace)
 
-The board is now shared and updates in realtime for everyone. Note: the anon key gates access — treat the deployed URL as internal and don't post it publicly. If you need real authentication later, Supabase Auth can be added on top.
+1. In the Vercel project, add the **Supabase** integration / storage resource.
+2. Confirm env vars exist for **Production**. Marketplace usually injects `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (and often `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `POSTGRES_URL`). That is enough — you do not have to also create `VITE_SUPABASE_*` copies.
+3. Redeploy. The production build maps those names into the Vite client bundle, and if `POSTGRES_URL` is present it also applies `supabase/schema.sql` (the `briefs` and `settings` tables).
+4. Open the CRM, pick a teammate, and check the sidebar: **Data: Supabase (team sync)**. If it still says **this browser only**, the last production build did not see those env vars — redeploy after they are saved.
+
+### Option B — paste keys yourself
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Open **SQL Editor**, paste `supabase/schema.sql`, run it.
+3. Copy the Project URL and publishable/anon key into `.env.local` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (see `.env.example`). For production, add the same names in Vercel → Project → Settings → Environment Variables, then redeploy.
+
+The password sign-in is **not** Supabase. It is remembered on each device only. Teammate switching is also per browser. Only briefs, lists, and intake sync through Supabase.
+
+Treat the deployed URL as internal. The anon key is a public client key with open row policies in `schema.sql`.
 
 ## Workflow reference
 
