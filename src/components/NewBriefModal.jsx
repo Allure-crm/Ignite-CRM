@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { briefName, nextBriefNumber, uuid, todayKey } from '../lib/helpers'
+import FormatTypeField from './FormatTypeField'
 
 export default function NewBriefModal({ config, user, briefs, onClose, onCreate }) {
   const strategistRoles = ['strategist', 'creative_strategist']
@@ -10,6 +11,7 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate 
     persona: '',
     awarenessStage: '',
     type: '',
+    formatType: '',
     facebookPage: '',
     landingPage: '',
     adConcept: '',
@@ -90,6 +92,13 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate 
             <label>{config.fieldLabels.type}</label>
             <Choices field="type" options={config.types} />
           </div>
+
+          <FormatTypeField
+            config={config}
+            value={form.formatType}
+            onChange={(v) => set('formatType', v)}
+            extraOptions={briefs.map((b) => b.formatType)}
+          />
 
           <div className="field">
             <label>{config.fieldLabels.page}</label>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { fmtDate } from '../lib/helpers'
+import FormatTypeField from './FormatTypeField'
 
 export default function BriefDetail({ config, brief, onClose, onSave, onDelete, onAction }) {
   const [edit, setEdit] = useState({
@@ -101,6 +102,12 @@ export default function BriefDetail({ config, brief, onClose, onSave, onDelete, 
             <Choices field="type" options={config.types} />
           </div>
 
+          <FormatTypeField
+            config={config}
+            value={edit.formatType}
+            onChange={(v) => set('formatType', v)}
+          />
+
           <div className="field">
             <label>{config.fieldLabels.page}</label>
             <select value={edit.facebookPage} onChange={(e) => set('facebookPage', e.target.value)}>
@@ -121,11 +128,6 @@ export default function BriefDetail({ config, brief, onClose, onSave, onDelete, 
           <div className="field">
             <label>{config.fieldLabels.angle}</label>
             <input type="text" placeholder="What's the angle?" value={edit.angle} onChange={(e) => set('angle', e.target.value)} />
-          </div>
-
-          <div className="field">
-            <label>{config.fieldLabels.formatType}</label>
-            <input type="text" placeholder="e.g. AI Animated, Broll + VO, UGC-Style…" value={edit.formatType} onChange={(e) => set('formatType', e.target.value)} />
           </div>
 
           <div className="field">

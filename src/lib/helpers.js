@@ -7,6 +7,7 @@ export function mergedConfig(overrides = {}) {
     ...baseConfig,
     ...overrides,
     fieldLabels: { ...baseConfig.fieldLabels, ...(overrides.fieldLabels || {}) },
+    formatTypes: overrides.formatTypes || baseConfig.formatTypes || [],
     statuses: baseConfig.statuses,
     transitions: baseConfig.transitions,
     roles: baseConfig.roles,
@@ -120,6 +121,20 @@ export function briefsInPeriod(briefs, period, key) {
     if (period === 'daily') return d === key
     return weekStartKey(d) === key
   })
+}
+
+export function formatTypeOptions(config, extra = []) {
+  const seen = new Set()
+  const out = []
+  for (const value of [...(config.formatTypes || []), ...extra]) {
+    const text = String(value || '').trim()
+    if (!text) continue
+    const key = text.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(text)
+  }
+  return out
 }
 
 export function importMissingBriefs(existingBriefs) {
