@@ -9,6 +9,7 @@ export default function ManageLists({ config, overrides, onClose, onSave }) {
     pages: config.pages,
     landingPages: config.landingPages,
     types: config.types,
+    formatTypes: config.formatTypes || [],
     users: config.users,
     brandName: config.brandName,
     brandTagline: config.brandTagline,
@@ -25,7 +26,8 @@ export default function ManageLists({ config, overrides, onClose, onSave }) {
     { key: 'personas', label: config.fieldLabels.persona + 's' },
     { key: 'pages', label: config.fieldLabels.page + 's' },
     { key: 'landingPages', label: config.fieldLabels.landingPage + 's' },
-    { key: 'types', label: 'Types' },
+    { key: 'types', label: 'Formats' },
+    { key: 'formatTypes', label: 'Format Types' },
     { key: 'team', label: 'Team' },
     { key: 'brand', label: 'Brand' },
   ]
@@ -57,7 +59,7 @@ export default function ManageLists({ config, overrides, onClose, onSave }) {
           ))}
         </div>
         <div className="modal-body">
-          {['personas', 'pages', 'landingPages', 'types'].includes(tab) && (
+          {['personas', 'pages', 'landingPages', 'types', 'formatTypes'].includes(tab) && (
             <>
               <div className="add-row">
                 <input

@@ -242,7 +242,10 @@ body {
   color: var(--text); padding: 10px 12px; font-size: 13px; outline: none; font-family: inherit;
 }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+.choice-row,
 .choice-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.field .choice-row,
+.field .choice-row { margin-bottom: 8px; }
 .choice {
   border: 1px solid var(--border); background: var(--panel); color: var(--muted);
   border-radius: 9px; padding: 8px 14px; font-size: 12.5px; cursor: pointer;

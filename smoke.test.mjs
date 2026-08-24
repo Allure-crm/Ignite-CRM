@@ -1,7 +1,8 @@
 // Workflow smoke test — run with: node smoke.test.mjs
 // Validates the brand.config workflow definition after you customize it.
-import { briefName, nextBriefNumber, applyTransition, mergedConfig } from './src/lib/helpers.js'
+import { briefName, nextBriefNumber, applyTransition, mergedConfig, formatTypeOptions, importMissingBriefs } from './src/lib/helpers.js'
 import { resolveSupabaseCreds, postgresUrl } from './src/lib/supabaseEnv.js'
+import { briefsToCsv } from './src/lib/exportSheet.js'
 import config from './src/brand.config.js'
 
 const n = briefName({ abbr: 'TY', date: '2026-06-01', briefNumber: 2, persona: 'Persona A', awarenessStage: 'TOF', type: 'Static', landingPage: 'PDP' })
@@ -55,5 +56,27 @@ console.assert(mapped.url === 'https://example.supabase.co' && mapped.anonKey ==
 console.assert(resolveSupabaseCreds({}).url === '' && !resolveSupabaseCreds({}).anonKey, 'empty creds FAILED')
 console.assert(postgresUrl({ POSTGRES_URL: 'postgres://x' }) === 'postgres://x', 'postgres url FAILED')
 console.assert(!config.supabase.url && !config.supabase.anonKey, 'brand config should not ship supabase keys')
+
+const formatOpts = formatTypeOptions({ formatTypes: ['AI Animated', 'Broll + VO'] }, ['Female holding bottle', 'AI Animated', ''])
+console.assert(formatOpts.includes('AI Animated') && formatOpts.includes('Broll + VO') && formatOpts.includes('Female holding bottle'), 'formatTypeOptions FAILED')
+console.assert(formatOpts.filter((v) => v.toLowerCase() === 'ai animated').length === 1, 'formatTypeOptions dedupe FAILED')
+
+const existingSheet = [
+  { briefNumber: 1, name: 'Keep Me', formatType: 'Native story', adConcept: 'existing concept', persona: 'Persona X', status: 'launched' },
+  { briefNumber: 2, name: 'Also Keep', formatType: 'Female holding bottle', learnings: 'do not wipe', status: 'scripting' },
+]
+const csv = briefsToCsv(existingSheet, config)
+console.assert(csv.includes('Format Type'), 'csv header format type FAILED')
+console.assert(csv.includes('Native story') && csv.includes('Female holding bottle'), 'csv lost formatType FAILED')
+console.assert(csv.includes('existing concept') && csv.includes('do not wipe'), 'csv lost sheet data FAILED')
+console.assert(csv.includes('Keep Me') && csv.includes('Also Keep'), 'csv lost brief names FAILED')
+
+const skipped = importMissingBriefs(existingSheet)
+console.assert(skipped.every((row) => row.briefNumber !== 1 && row.briefNumber !== 2), 'import must not replace existing sheet rows')
+
+const mergedTypes = mergedConfig({ formatTypes: ['Custom Type'] })
+console.assert(mergedTypes.formatTypes[0] === 'Custom Type' && mergedTypes.types.length, 'formatTypes merge FAILED')
+const mergedKeep = mergedConfig({})
+console.assert(mergedKeep.formatTypes.includes('AI Animated'), 'default formatTypes FAILED')
 
 console.log('ALL SMOKE TESTS PASSED — path:', ['scripting', ...path].join(' > '))
