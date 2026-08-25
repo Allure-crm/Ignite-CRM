@@ -1,3 +1,5 @@
+import { canCreateBriefs } from '../lib/helpers'
+
 const TRACKER_ROLES = ['operator', 'creative_strategist', 'cfo']
 
 export default function Sidebar({ config, user, view, briefs, onView, onNewBrief, onManageLists, onSwitchUser, isSupabase, storeError }) {
@@ -20,7 +22,9 @@ export default function Sidebar({ config, user, view, briefs, onView, onNewBrief
         </div>
       </div>
 
-      <button className="btn-primary" onClick={onNewBrief}>+ New Brief</button>
+      {canCreateBriefs(user.role) && (
+        <button className="btn-primary" onClick={onNewBrief}>+ New Brief</button>
+      )}
 
       <div className="nav-section">
         <div className="nav-label">My Queue</div>

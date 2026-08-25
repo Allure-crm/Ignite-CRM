@@ -27,7 +27,7 @@ export default function Board({ config, user, view, briefs, search, onSearch, on
               </div>
               {lane.length === 0 && <div className="lane-empty">No briefs</div>}
               {lane.map((b) => (
-                <BriefCard key={b.id} brief={b} config={config} onOpen={onOpen} onAction={onAction} />
+                <BriefCard key={b.id} brief={b} config={config} user={user} onOpen={onOpen} onAction={onAction} />
               ))}
             </div>
           )
@@ -43,12 +43,12 @@ export default function Board({ config, user, view, briefs, search, onSearch, on
       <div className="empty-state">
         <div className="icon">📄</div>
         <h3>No briefs here</h3>
-        <p>Click "New Brief" in the sidebar to create your first brief.</p>
+        <p>{user.role === 'video_editor' ? 'Nothing in this lane right now.' : 'Click "New Brief" in the sidebar to create your first brief.'}</p>
       </div>
     ) : (
       <div className="cards-grid">
         {lane.map((b) => (
-          <BriefCard key={b.id} brief={b} config={config} onOpen={onOpen} onAction={onAction} />
+          <BriefCard key={b.id} brief={b} config={config} user={user} onOpen={onOpen} onAction={onAction} />
         ))}
       </div>
     )

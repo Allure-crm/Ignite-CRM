@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { store, loadUser, saveUser, isSupabase, loadUnlocked, saveUnlocked } from './lib/store'
-import { mergedConfig, applyTransition } from './lib/helpers'
+import { mergedConfig, applyTransition, allowedTransitions, canCreateBriefs, canDeleteBriefs } from './lib/helpers'
 import Sidebar from './components/Sidebar'
 import Board from './components/Board'
 import NewBriefModal from './components/NewBriefModal'
@@ -99,6 +99,8 @@ export default function App() {
   }
 
   const runAction = (brief, transition) => {
+    const allowed = allowedTransitions(config, brief.status, user?.role)
+    if (!allowed.some((t) => t.to === transition.to && t.label === transition.label)) return
     if (transition.needsAssignment || transition.needsNote) {
       setModal({ kind: 'action', brief, transition })
     } else {
@@ -150,7 +152,7 @@ export default function App() {
         view={view}
         briefs={briefs}
         onView={setView}
-        onNewBrief={() => setModal({ kind: 'new' })}
+        onNewBrief={() => { if (canCreateBriefs(user.role)) setModal({ kind: 'new' }) }}
         onManageLists={() => setModal({ kind: 'lists' })}
         onSwitchUser={() => { saveUser(null); setUser(null) }}
         isSupabase={isSupabase}
@@ -159,6 +161,7 @@ export default function App() {
       {view === 'summary' ? (
         <Overview
           config={config}
+          user={user}
           briefs={briefs}
           onOpen={(brief) => setModal({ kind: 'detail', briefId: brief.id })}
           onAction={runAction}
@@ -194,7 +197,7 @@ export default function App() {
         />
       )}
 
-      {modal?.kind === 'new' && (
+      {modal?.kind === 'new' && canCreateBriefs(user.role) && (
         <NewBriefModal
           config={config}
           user={user}
@@ -206,10 +209,11 @@ export default function App() {
       {modal?.kind === 'detail' && (
         <BriefDetail
           config={config}
+          user={user}
           brief={briefs.find((b) => b.id === modal.briefId)}
           onClose={() => setModal(null)}
           onSave={upsert}
-          onDelete={removeBrief}
+          onDelete={(id) => { if (canDeleteBriefs(user.role)) removeBrief(id) }}
           onAction={runAction}
         />
       )}

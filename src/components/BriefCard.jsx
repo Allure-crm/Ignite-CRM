@@ -1,7 +1,7 @@
-import { fmtDate, ageDays } from '../lib/helpers'
+import { fmtDate, ageDays, allowedTransitions } from '../lib/helpers'
 
-export default function BriefCard({ brief, config, onOpen, onAction }) {
-  const transitions = config.transitions[brief.status] || []
+export default function BriefCard({ brief, config, user, onOpen, onAction }) {
+  const transitions = allowedTransitions(config, brief.status, user?.role)
   const days = ageDays(brief.updatedAt || brief.createdAt)
   const ageClass = days >= 5 ? 'late' : days >= 2 ? 'warn' : ''
   const latestNote = [...(brief.history || [])].reverse().find((h) => h.note)?.note
@@ -36,16 +36,19 @@ export default function BriefCard({ brief, config, onOpen, onAction }) {
         {brief.facebookPage && <span className="chip" title={brief.facebookPage}>{brief.facebookPage}</span>}
         {brief.landingPage && <span className="chip lp">{brief.landingPage}</span>}
       </div>
-      {brief.scriptLink && (
-        <a
-          className="card-link"
-          href={brief.scriptLink}
-          target="_blank"
-          rel="noreferrer"
-          onClick={(e) => e.stopPropagation()}
-        >
-          ↗ View Brief
-        </a>
+      {(brief.scriptLink || brief.finalVideoLink) && (
+        <div className="card-links" onClick={(e) => e.stopPropagation()}>
+          {brief.scriptLink && (
+            <a className="card-link" href={brief.scriptLink} target="_blank" rel="noreferrer">
+              ↗ View Brief
+            </a>
+          )}
+          {brief.finalVideoLink && (
+            <a className="card-link" href={brief.finalVideoLink} target="_blank" rel="noreferrer">
+              ↗ View Asset
+            </a>
+          )}
+        </div>
       )}
       {transitions.length > 0 && (
         <div className="card-actions" onClick={(e) => e.stopPropagation()}>
