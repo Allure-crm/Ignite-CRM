@@ -1,6 +1,6 @@
 // Workflow smoke test — run with: node smoke.test.mjs
 // Validates the brand.config workflow definition after you customize it.
-import { briefName, nextBriefNumber, applyTransition, mergedConfig, formatTypeOptions, importMissingBriefs } from './src/lib/helpers.js'
+import { briefName, nextBriefNumber, applyTransition, mergedConfig, formatTypeOptions, importMissingBriefs, allowedTransitions, canCreateBriefs, canDeleteBriefs } from './src/lib/helpers.js'
 import { resolveSupabaseCreds, postgresUrl } from './src/lib/supabaseEnv.js'
 import { briefsToCsv } from './src/lib/exportSheet.js'
 import config from './src/brand.config.js'
@@ -78,5 +78,18 @@ const mergedTypes = mergedConfig({ formatTypes: ['Custom Type'] })
 console.assert(mergedTypes.formatTypes[0] === 'Custom Type' && mergedTypes.types.length, 'formatTypes merge FAILED')
 const mergedKeep = mergedConfig({})
 console.assert(mergedKeep.formatTypes.includes('AI Animated'), 'default formatTypes FAILED')
+
+console.assert(!canCreateBriefs('video_editor') && canCreateBriefs('creative_strategist'), 'create briefs permission FAILED')
+console.assert(!canDeleteBriefs('video_editor') && canDeleteBriefs('operator'), 'delete briefs permission FAILED')
+const editorOnReview = allowedTransitions(config, 'needs_review', 'video_editor')
+console.assert(editorOnReview.length === 0, 'editor must not approve needs_review')
+const editorOnScriptReview = allowedTransitions(config, 'script_review', 'video_editor')
+console.assert(editorOnScriptReview.length === 0, 'editor must not approve script_review')
+const editorSubmit = allowedTransitions(config, 'needs_editing', 'video_editor')
+console.assert(editorSubmit.length === 1 && editorSubmit[0].to === 'needs_review', 'editor submit FAILED')
+const editorResubmit = allowedTransitions(config, 'needs_revision', 'video_editor')
+console.assert(editorResubmit.length === 1 && editorResubmit[0].to === 'needs_review', 'editor resubmit FAILED')
+const stratApprove = allowedTransitions(config, 'needs_review', 'creative_strategist')
+console.assert(stratApprove.some((t) => t.label === 'Approve'), 'strategist approve FAILED')
 
 console.log('ALL SMOKE TESTS PASSED — path:', ['scripting', ...path].join(' > '))

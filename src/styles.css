@@ -189,8 +189,11 @@ body {
   max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .chip.lp { background: #141A14; color: #6EAE6E; border-color: #1E2E1E; }
-.card-link { display: inline-block; margin-top: 10px; color: var(--accent); font-size: 12px; text-decoration: none; }
+.card-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.card-link { display: inline-block; color: var(--accent); font-size: 12px; text-decoration: none; }
 .card-link:hover { text-decoration: underline; }
+.field-open-link { display: inline-block; margin-top: 8px; color: var(--accent); font-size: 12px; text-decoration: none; }
+.field-open-link:hover { text-decoration: underline; }
 .card-actions { display: flex; gap: 8px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; flex-wrap: wrap; }
 .btn-action {
   border: none; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600;

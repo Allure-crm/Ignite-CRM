@@ -175,6 +175,28 @@ export function importMissingBriefs(existingBriefs) {
   return toAdd
 }
 
+export function canCreateBriefs(role) {
+  return role !== 'video_editor'
+}
+
+export function canDeleteBriefs(role) {
+  return role !== 'video_editor'
+}
+
+// Video editors may only submit a cut for review or resubmit after revision.
+const EDITOR_ALLOWED_TO = {
+  needs_editing: ['needs_review'],
+  needs_revision: ['needs_review'],
+}
+
+export function allowedTransitions(config, status, role) {
+  const all = config.transitions[status] || []
+  if (role !== 'video_editor') return all
+  const allowedTo = EDITOR_ALLOWED_TO[status]
+  if (!allowedTo) return []
+  return all.filter((t) => allowedTo.includes(t.to))
+}
+
 export function applyTransition(brief, transition, { by, note, assignTo }) {
   const now = Date.now()
   const entry = { status: transition.to, by, at: now }

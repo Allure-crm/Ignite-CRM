@@ -11,7 +11,7 @@ import {
 import BatchSheet from './BatchSheet'
 import BriefCard from './BriefCard'
 
-export default function Overview({ config, briefs, onOpen, onAction }) {
+export default function Overview({ config, user, briefs, onOpen, onAction }) {
   const [period, setPeriod] = useState('weekly') // 'daily' | 'weekly'
   const [mode, setMode] = useState('summary') // 'pipeline' | 'summary'
   const [daySel, setDaySel] = useState(null)
@@ -133,7 +133,7 @@ export default function Overview({ config, briefs, onOpen, onAction }) {
         </div>
 
         {mode === 'pipeline' ? (
-          <PipelineBoard config={config} briefs={scoped} onOpen={onOpen} onAction={onAction} />
+          <PipelineBoard config={config} user={user} briefs={scoped} onOpen={onOpen} onAction={onAction} />
         ) : (
           <BatchSheet
             config={config}
@@ -148,7 +148,7 @@ export default function Overview({ config, briefs, onOpen, onAction }) {
   )
 }
 
-function PipelineBoard({ config, briefs, onOpen, onAction }) {
+function PipelineBoard({ config, user, briefs, onOpen, onAction }) {
   return (
     <div>
       <div className="pipe-strip">
@@ -178,7 +178,7 @@ function PipelineBoard({ config, briefs, onOpen, onAction }) {
               </div>
               {laneBriefs.length === 0 && <div className="lane-empty">No batches</div>}
               {laneBriefs.map((b) => (
-                <BriefCard key={b.id} brief={b} config={config} onOpen={onOpen} onAction={onAction} />
+                <BriefCard key={b.id} brief={b} config={config} user={user} onOpen={onOpen} onAction={onAction} />
               ))}
             </div>
           )

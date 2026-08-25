@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { fmtDate } from '../lib/helpers'
+import { fmtDate, allowedTransitions, canDeleteBriefs } from '../lib/helpers'
 import FormatTypeField from './FormatTypeField'
 
-export default function BriefDetail({ config, brief, onClose, onSave, onDelete, onAction }) {
+export default function BriefDetail({ config, user, brief, onClose, onSave, onDelete, onAction }) {
   const [edit, setEdit] = useState({
     date: brief?.date || '',
     persona: brief?.persona || '',
@@ -23,7 +23,7 @@ export default function BriefDetail({ config, brief, onClose, onSave, onDelete, 
   })
   if (!brief) return null
 
-  const transitions = config.transitions[brief.status] || []
+  const transitions = allowedTransitions(config, brief.status, user?.role)
   const set = (k, v) => setEdit((e) => ({ ...e, [k]: v }))
   const latestNote = [...(brief.history || [])].reverse().find((h) => h.note)
 
@@ -143,10 +143,16 @@ export default function BriefDetail({ config, brief, onClose, onSave, onDelete, 
           <div className="field">
             <label>{config.fieldLabels.scriptLink}</label>
             <input type="url" placeholder="Paste link…" value={edit.scriptLink} onChange={(e) => set('scriptLink', e.target.value)} />
+            {edit.scriptLink && (
+              <a className="field-open-link" href={edit.scriptLink} target="_blank" rel="noreferrer">↗ View Brief</a>
+            )}
           </div>
           <div className="field">
             <label>{config.fieldLabels.finalVideoLink}</label>
             <input type="url" placeholder="Paste link…" value={edit.finalVideoLink} onChange={(e) => set('finalVideoLink', e.target.value)} />
+            {edit.finalVideoLink && (
+              <a className="field-open-link" href={edit.finalVideoLink} target="_blank" rel="noreferrer">↗ View Asset</a>
+            )}
           </div>
           <div className="field">
             <label>{config.fieldLabels.ugcAssetsLink}</label>
@@ -181,13 +187,15 @@ export default function BriefDetail({ config, brief, onClose, onSave, onDelete, 
         </div>
         <div className="modal-foot" style={{ display: 'flex', gap: 10 }}>
           <button className="btn-primary" onClick={save}>Save Changes</button>
-          <button
-            className="btn-small"
-            style={{ color: '#E85040' }}
-            onClick={() => { if (confirm('Delete this brief?')) onDelete(brief.id) }}
-          >
-            Delete
-          </button>
+          {canDeleteBriefs(user?.role) && (
+            <button
+              className="btn-small"
+              style={{ color: '#E85040' }}
+              onClick={() => { if (confirm('Delete this brief?')) onDelete(brief.id) }}
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
     </div>
