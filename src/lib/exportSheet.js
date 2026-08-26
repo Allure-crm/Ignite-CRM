@@ -21,7 +21,8 @@ export function briefsToCsv(briefs, config) {
   const headers = [
     '#',
     'Date',
-    'CS Name',
+    config.fieldLabels.csName || 'CS Name',
+    config.fieldLabels.adName || 'Ad Name',
     'Editor',
     'Format',
     'Format Type',
@@ -43,6 +44,7 @@ export function briefsToCsv(briefs, config) {
   const rows = briefs.map((b, i) => [
     b.briefNumber || i + 1,
     b.date || '',
+    b.strategist || '',
     b.name || '',
     b.editor || b.assignedTo || 'Unassigned',
     b.type || '',

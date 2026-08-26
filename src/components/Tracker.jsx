@@ -132,10 +132,10 @@ export default function Tracker({ config, briefs, onOpen, onBatchEdit }) {
           </select>
         </div>
         <div className="filter-group">
-          <label>CS Name</label>
+          <label>Ad Name</label>
           <input
             type="search"
-            placeholder="TOF, Video, editor…"
+            placeholder="CS, TOF, Video…"
             value={filters.csName}
             onChange={(e) => setF('csName', e.target.value)}
           />

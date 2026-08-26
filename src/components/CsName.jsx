@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function CsName({ value, placeholder = 'Name builds as fields are filled…', compact = false }) {
+export default function CsName({ value, placeholder = 'Name builds as fields are filled…', compact = false, copyTitle = 'Copy CS Name' }) {
   const [copied, setCopied] = useState(false)
   const text = String(value || '').trim()
 
@@ -26,7 +26,7 @@ export default function CsName({ value, placeholder = 'Name builds as fields are
       <span className="cs-name-inline" title={text || placeholder}>
         <span className="cs-name-text">{text || '—'}</span>
         {text ? (
-          <button type="button" className="cs-copy" onClick={copy} title="Copy CS Name">
+          <button type="button" className="cs-copy" onClick={copy} title={copyTitle}>
             {copied ? 'Copied' : 'Copy'}
           </button>
         ) : null}
