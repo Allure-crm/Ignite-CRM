@@ -448,6 +448,47 @@ body {
   color: var(--faint); margin-top: 3px; white-space: nowrap;
 }
 
+/* ---------- Format by week (Overview summary) ---------- */
+.fmt-wrap {
+  overflow: auto; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--panel);
+}
+.fmt-table {
+  width: 100%; border-collapse: collapse; min-width: 720px;
+  font-size: 13px;
+}
+.fmt-title {
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  color: #0A0A0A; font-weight: 800; letter-spacing: 1.4px;
+  text-transform: uppercase; font-size: 13px; text-align: center;
+  padding: 12px 14px;
+}
+.fmt-th {
+  background: color-mix(in srgb, var(--accent) 22%, var(--bg2));
+  color: var(--accent); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .7px; font-size: 11px;
+  padding: 10px 12px; text-align: center; white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.fmt-th-format { text-align: left; min-width: 180px; }
+.fmt-th-mtd { color: var(--accent2); }
+.fmt-td {
+  padding: 9px 12px; border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border); color: var(--text);
+}
+.fmt-td:last-child { border-right: none; }
+.fmt-td-format { font-weight: 600; white-space: nowrap; }
+.fmt-td-num { text-align: center; font-variant-numeric: tabular-nums; }
+.fmt-hot {
+  background: color-mix(in srgb, var(--accent) 28%, var(--panel));
+  color: #0A0A0A; font-weight: 800;
+}
+.fmt-mtd { font-weight: 800; }
+.fmt-empty {
+  text-align: center; padding: 48px 14px; color: var(--faint); font-size: 13px;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--panel);
+}
+
 /* ---------- Tracker week groups ---------- */
 .tracker-week-row { cursor: pointer; }
 .tracker-week-cell {

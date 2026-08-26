@@ -5,7 +5,7 @@ console.assert = (cond, msg) => {
   origAssert(cond, msg)
   if (!cond) throw new Error(msg || 'assertion failed')
 }
-import { briefName, nextBriefNumber, applyTransition, mergedConfig, formatTypeOptions, formatTypeOptionsFor, importMissingBriefs, allowedTransitions, canCreateBriefs, canDeleteBriefs, buildCsName, applyNamingPatch, duplicateBrief, withCsName, matchesCsNameQuery, UNASSIGNED_EDITOR, defaultViewFor, isViewAllowed, roleQueue } from './src/lib/helpers.js'
+import { briefName, nextBriefNumber, applyTransition, mergedConfig, formatTypeOptions, formatTypeOptionsFor, importMissingBriefs, allowedTransitions, canCreateBriefs, canDeleteBriefs, buildCsName, applyNamingPatch, duplicateBrief, withCsName, matchesCsNameQuery, UNASSIGNED_EDITOR, defaultViewFor, isViewAllowed, roleQueue, weeksOverlappingMonth, formatByWeekMatrix, addMonths } from './src/lib/helpers.js'
 import { resolveSupabaseCreds, postgresUrl } from './src/lib/supabaseEnv.js'
 import { briefsToCsv } from './src/lib/exportSheet.js'
 import config from './src/brand.config.js'
@@ -154,6 +154,31 @@ const legacy = withCsName({ strategist: 'Mia', awarenessStage: 'TOF', type: 'Vid
 console.assert(legacy.funnel === 'TOF' && legacy.awareness === '' && legacy.name.includes('TOF'), 'legacy funnel migrate FAILED: ' + legacy.name)
 
 console.assert(matchesCsNameQuery(legacy, 'TOF') && matchesCsNameQuery(legacy, 'video') && !matchesCsNameQuery(legacy, 'BOF'), 'cs search FAILED')
+
+console.assert(addMonths('2026-08', -1) === '2026-07' && addMonths('2026-12', 1) === '2027-01', 'addMonths FAILED')
+const augWeeks = weeksOverlappingMonth('2026-08')
+console.assert(augWeeks[0].label === 'W1 Aug 1-2', 'aug week1 label FAILED: ' + augWeeks[0].label)
+console.assert(augWeeks.some((w) => w.label === 'W2 Aug 3-9'), 'aug week2 label FAILED')
+console.assert(augWeeks[augWeeks.length - 1].label === `W${augWeeks.length} Aug 31`, 'aug last week FAILED: ' + augWeeks[augWeeks.length - 1].label)
+
+const matrix = formatByWeekMatrix([
+  { formatType: 'Singing', date: '2026-08-11' },
+  { formatType: 'Singing', date: '2026-08-12' },
+  { formatType: 'Singing', date: '2026-08-12' },
+  { formatType: 'Podcast', date: '2026-08-04' },
+  { formatType: 'Podcast', date: '2026-07-30' },
+  { formatType: '', date: '2026-08-31' },
+], '2026-08')
+const singing = matrix.rows.find((r) => r.format === 'Singing')
+const podcast = matrix.rows.find((r) => r.format === 'Podcast')
+const unspecified = matrix.rows.find((r) => r.format === 'Unspecified')
+const w2 = matrix.weeks.findIndex((w) => w.label.includes('Aug 3-9'))
+const w3 = matrix.weeks.findIndex((w) => w.label.includes('Aug 10-16'))
+const wLast = matrix.weeks.length - 1
+console.assert(singing.mtd === 3 && singing.counts[w3] === 3, 'singing week counts FAILED')
+console.assert(podcast.mtd === 1 && podcast.counts[w2] === 1, 'podcast should not include July')
+console.assert(unspecified.mtd === 1 && unspecified.counts[wLast] === 1, 'unspecified last week FAILED')
+console.assert(matrix.total === 5, 'month total should skip other months')
 
 console.assert(csv.includes('CS Name'), 'csv header cs name FAILED')
 
