@@ -8,6 +8,8 @@ import {
   canDeleteBriefs,
   withCsName,
   duplicateBrief,
+  defaultViewFor,
+  isViewAllowed,
   UNASSIGNED_EDITOR,
 } from './lib/helpers'
 import Sidebar from './components/Sidebar'
@@ -66,9 +68,10 @@ export default function App() {
     document.title = `${config.brandName} ${config.brandTagline}`
   }, [config])
 
-  // default view = first queue lane for the user's role
+  // Default to the first queue lane, or Overview when the role has no personal queue.
   useEffect(() => {
-    if (user && !view) setView(config.roles[user.role]?.queue?.[0] || 'all')
+    if (!user) return
+    if (!isViewAllowed(config, user.role, view)) setView(defaultViewFor(config, user.role))
   }, [user, view, config])
 
   const persist = async (action) => {

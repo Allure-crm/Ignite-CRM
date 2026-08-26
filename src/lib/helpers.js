@@ -385,6 +385,26 @@ export function importMissingBriefs(existingBriefs) {
   return toAdd
 }
 
+export const OVERVIEW_VIEWS = ['summary', 'all', 'launched', 'tracker', 'intake']
+export const TRACKER_ROLES = ['operator', 'creative_strategist', 'cfo']
+
+export function roleQueue(config, role) {
+  return config?.roles?.[role]?.queue || []
+}
+
+export function defaultViewFor(config, role) {
+  const queue = roleQueue(config, role)
+  if (queue.length) return queue[0]
+  return TRACKER_ROLES.includes(role) ? 'summary' : 'all'
+}
+
+export function isViewAllowed(config, role, view) {
+  if (!view) return false
+  if (view === 'tracker' || view === 'intake') return TRACKER_ROLES.includes(role)
+  if (OVERVIEW_VIEWS.includes(view)) return true
+  return roleQueue(config, role).includes(view)
+}
+
 export function canCreateBriefs(role) {
   return role !== 'video_editor'
 }
