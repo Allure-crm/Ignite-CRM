@@ -39,8 +39,8 @@ export default {
     media_buyer:         { label: 'Media Buyer',         queue: ['ready_to_launch'] },
   },
 
-  // Brief title convention: (Role), Batch, (Batch Number)
-  // e.g. "Mia, Batch, 1" or "Zain, Batch, 3"
+  // Ad Name convention: fields joined with `_`, then the unique batch number
+  // e.g. "Mia_Unassigned_Video_UGC_TOF_Unaware_General_Angle_1"
 
   // ---- Brief fields (option lists; editable in Manage Lists) --------
   fieldLabels: {

@@ -40,8 +40,8 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
   })
 
   const complete = form.strategist && form.date && form.persona && form.funnel && form.awareness && form.type && form.formatType && form.facebookPage && form.landingPage
-  const preview = buildCsName(form)
   const number = nextBriefNumber(briefs)
+  const preview = buildCsName({ ...form, briefNumber: number })
 
   const remember = (kind, value) => {
     if (value && onRememberName) onRememberName(kind, value)

@@ -96,6 +96,11 @@ export function namingFields(brief = {}) {
   }
 }
 
+export function csNameNumber(source = {}) {
+  const n = Number(source.briefNumber)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
 export function csNameParts(source = {}) {
   const fields = source.strategist !== undefined && source.editor !== undefined
     ? {
@@ -109,8 +114,11 @@ export function csNameParts(source = {}) {
       angle: String(source.angle || '').trim(),
     }
     : namingFields(source)
-  return [fields.strategist, fields.editor, fields.type, fields.formatType, fields.funnel, fields.awareness, fields.persona, fields.angle]
+  const parts = [fields.strategist, fields.editor, fields.type, fields.formatType, fields.funnel, fields.awareness, fields.persona, fields.angle]
     .filter(Boolean)
+  const number = csNameNumber(source)
+  if (number) parts.push(String(number))
+  return parts
 }
 
 export function buildCsName(source = {}, { copy = false } = {}) {
@@ -145,7 +153,7 @@ export function withCsName(brief, { copy } = {}) {
     ...brief,
     ...fields,
     awarenessStage: fields.awareness || brief?.awarenessStage || '',
-    name: buildCsName(fields, { copy: isCopy }),
+    name: buildCsName({ ...fields, briefNumber: brief.briefNumber }, { copy: isCopy }),
     nameIsCopy: isCopy,
   }
 }
@@ -234,7 +242,10 @@ export function angleOptions(config, briefs = []) {
 
 export function csNameSearchHaystack(brief) {
   const fields = namingFields(brief)
-  return [buildCsName(fields), brief.name, ...Object.values(fields)].filter(Boolean).join(' ').toLowerCase()
+  return [buildCsName({ ...fields, briefNumber: brief.briefNumber }), brief.name, ...Object.values(fields), brief.briefNumber]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
 }
 
 export function matchesCsNameQuery(brief, query) {
