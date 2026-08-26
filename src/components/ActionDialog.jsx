@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import CsName from './CsName'
 
 // Prompts for an assignee and/or a revision note before a transition runs.
 export default function ActionDialog({ config, brief, transition, onClose, onConfirm }) {
@@ -18,10 +19,7 @@ export default function ActionDialog({ config, brief, transition, onClose, onCon
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
-          <div className="name-preview" style={{ marginBottom: 16 }}>
-            <div className="label">Brief</div>
-            <div className="value">{brief.name}</div>
-          </div>
+          <CsName value={brief.name} />
           {transition.needsAssignment && (
             <div className="field">
               <label>Assign to</label>

@@ -7,15 +7,20 @@ import {
   dayLabel,
   briefsInPeriod,
   PIPELINE_LANES,
+  matchesCsNameQuery,
 } from '../lib/helpers'
 import BatchSheet from './BatchSheet'
 import BriefCard from './BriefCard'
 
-export default function Overview({ config, user, briefs, onOpen, onAction }) {
+export default function Overview({ config, user, briefs, onOpen, onAction, onBatchEdit }) {
   const [period, setPeriod] = useState('weekly') // 'daily' | 'weekly'
   const [mode, setMode] = useState('summary') // 'pipeline' | 'summary'
   const [daySel, setDaySel] = useState(null)
   const [weekSel, setWeekSel] = useState(null)
+  const [csQuery, setCsQuery] = useState('')
+  const [selected, setSelected] = useState(() => new Set())
+  const [sortKey, setSortKey] = useState('briefNumber')
+  const [sortDir, setSortDir] = useState('asc')
 
   const weeksWithData = useMemo(() => {
     const keys = new Set(briefs.map((b) => weekStartKey(b.date)).filter(Boolean))
@@ -37,10 +42,16 @@ export default function Overview({ config, user, briefs, onOpen, onAction }) {
   const week = weekSel ?? weeksWithData[0] ?? weekStartKey(todayKey())
 
   const periodKey = period === 'daily' ? day : week
-  const scoped = useMemo(
-    () => [...briefsInPeriod(briefs, period, periodKey)].sort((a, b) => (a.briefNumber || 0) - (b.briefNumber || 0)),
-    [briefs, period, periodKey]
-  )
+  const scoped = useMemo(() => {
+    const list = briefsInPeriod(briefs, period, periodKey).filter((b) => matchesCsNameQuery(b, csQuery))
+    const dir = sortDir === 'desc' ? -1 : 1
+    return [...list].sort((a, b) => {
+      if (sortKey === 'briefNumber') return ((a.briefNumber || 0) - (b.briefNumber || 0)) * dir
+      const av = a[sortKey] ?? ''
+      const bv = b[sortKey] ?? ''
+      return String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' }) * dir
+    })
+  }, [briefs, period, periodKey, csQuery, sortKey, sortDir])
 
   const dailyGroups = useMemo(() => {
     if (period !== 'weekly') return null
@@ -93,6 +104,14 @@ export default function Overview({ config, user, briefs, onOpen, onAction }) {
               Summary
             </button>
           </div>
+          {mode === 'summary' && (
+            <input
+              className="search"
+              placeholder="Search CS Name…"
+              value={csQuery}
+              onChange={(e) => setCsQuery(e.target.value)}
+            />
+          )}
         </div>
       </div>
 
@@ -135,13 +154,40 @@ export default function Overview({ config, user, briefs, onOpen, onAction }) {
         {mode === 'pipeline' ? (
           <PipelineBoard config={config} user={user} briefs={scoped} onOpen={onOpen} onAction={onAction} />
         ) : (
-          <BatchSheet
-            config={config}
-            rows={scoped}
-            groups={dailyGroups}
-            onOpen={onOpen}
-            emptyText={`No batches inputted ${period === 'daily' ? 'on this day' : 'this week'}.`}
-          />
+          <>
+            {selected.size > 0 && (
+              <div className="batch-bar">
+                <span>{selected.size} selected</span>
+                <button className="btn-small" onClick={() => onBatchEdit(selected)}>Batch edit naming</button>
+                <button className="filter-clear" onClick={() => setSelected(new Set())}>Clear selection</button>
+              </div>
+            )}
+            <BatchSheet
+              config={config}
+              rows={scoped}
+              groups={dailyGroups}
+              onOpen={onOpen}
+              selected={selected}
+              onToggle={(id) => setSelected((prev) => {
+                const next = new Set(prev)
+                if (next.has(id)) next.delete(id)
+                else next.add(id)
+                return next
+              })}
+              onToggleAll={(ids, on) => setSelected((prev) => {
+                const next = new Set(prev)
+                ids.forEach((id) => { if (on) next.add(id); else next.delete(id) })
+                return next
+              })}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={(key) => {
+                if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+                else { setSortKey(key); setSortDir('asc') }
+              }}
+              emptyText={`No batches inputted ${period === 'daily' ? 'on this day' : 'this week'}.`}
+            />
+          </>
         )}
       </div>
     </main>

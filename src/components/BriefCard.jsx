@@ -1,4 +1,5 @@
 import { fmtDate, ageDays, allowedTransitions } from '../lib/helpers'
+import CsName from './CsName'
 
 export default function BriefCard({ brief, config, user, onOpen, onAction }) {
   const transitions = allowedTransitions(config, brief.status, user?.role)
@@ -10,7 +11,9 @@ export default function BriefCard({ brief, config, user, onOpen, onAction }) {
     <div className="card" onClick={() => onOpen(brief)}>
       <span className={`age ${ageClass}`}>{days}d</span>
       <div className="card-top">
-        <div className="card-name">{brief.name}</div>
+        <div className="card-name">
+          <CsName value={brief.name} compact />
+        </div>
         <span className="badge type">{brief.type}</span>
       </div>
       {brief.angle && <div className="card-angle">{brief.angle}</div>}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import CsName from './CsName'
 
 const RESULT_COLORS = {
   Winner: '#22c55e',
@@ -8,11 +9,38 @@ const RESULT_COLORS = {
   'KPI Winner': '#8b5cf6',
 }
 
-export const BATCH_SHEET_COLUMNS = 18
+export const BATCH_SHEET_COLUMNS = 20
 
-export default function BatchSheet({ config, rows, onOpen, groups, emptyText }) {
+const SORTABLE = [
+  { key: 'briefNumber', label: '#' },
+  { key: 'date', label: 'Date' },
+  { key: 'name', label: 'CS Name' },
+  { key: 'editor', label: 'Editor' },
+  { key: 'type', label: 'Format' },
+  { key: 'formatType', label: 'Format Type' },
+  { key: 'funnel', label: 'Funnel' },
+  { key: 'awareness', label: 'Awareness' },
+  { key: 'persona', label: 'Persona' },
+]
+
+export default function BatchSheet({
+  config,
+  rows,
+  onOpen,
+  groups,
+  emptyText,
+  selected,
+  onToggle,
+  onToggleAll,
+  sortKey,
+  sortDir,
+  onSort,
+}) {
   const statusLabel = (key) => config.statuses[key]?.label || key
   const statusColor = (key) => config.statuses[key]?.color || '#666'
+  const selectable = Boolean(selected && onToggle)
+  const hasGroups = Array.isArray(groups) && groups.length > 0
+  const colCount = BATCH_SHEET_COLUMNS + (selectable ? 1 : 0)
 
   const linkCell = (url, label) => {
     if (!url) return <span className="tracker-empty">—</span>
@@ -23,14 +51,40 @@ export default function BatchSheet({ config, rows, onOpen, groups, emptyText }) 
     )
   }
 
+  const sortMark = (key) => {
+    if (sortKey !== key) return ''
+    return sortDir === 'desc' ? ' ↓' : ' ↑'
+  }
+
+  const Th = ({ col }) => (
+    <th
+      className={`tracker-th ${onSort && SORTABLE.some((s) => s.key === col.key) ? 'sortable' : ''}`}
+      onClick={() => onSort && SORTABLE.some((s) => s.key === col.key) && onSort(col.key)}
+    >
+      {col.label}{sortMark(col.key)}
+    </th>
+  )
+
+  const visibleIds = (hasGroups ? groups.flatMap((g) => g.rows || []) : rows || []).map((b) => b.id)
+  const allSelected = selectable && visibleIds.length > 0 && visibleIds.every((id) => selected.has(id))
+
   const renderRow = (b, i) => (
-    <tr key={b.id} className="tracker-row" onClick={() => onOpen(b)}>
+    <tr key={b.id} className={`tracker-row ${selectable && selected.has(b.id) ? 'selected' : ''}`} onClick={() => onOpen(b)}>
+      {selectable && (
+        <td className="tracker-td tracker-check" onClick={(e) => e.stopPropagation()}>
+          <input type="checkbox" checked={selected.has(b.id)} onChange={() => onToggle(b.id)} />
+        </td>
+      )}
       <td className="tracker-td tracker-num">{b.briefNumber || i + 1}</td>
       <td className="tracker-td">{b.date || '—'}</td>
-      <td className="tracker-td tracker-name">{b.name || '—'}</td>
+      <td className="tracker-td tracker-name" onClick={(e) => e.stopPropagation()}>
+        <CsName value={b.name} compact />
+      </td>
+      <td className="tracker-td">{b.editor || b.assignedTo || 'Unassigned'}</td>
       <td className="tracker-td">{b.type || '—'}</td>
       <td className="tracker-td">{b.formatType || '—'}</td>
-      <td className="tracker-td">{b.awarenessStage || '—'}</td>
+      <td className="tracker-td">{b.funnel || '—'}</td>
+      <td className="tracker-td">{b.awareness || '—'}</td>
       <td className="tracker-td">{b.persona || '—'}</td>
       <td className="tracker-td">{b.facebookPage || '—'}</td>
       <td className="tracker-td">{b.landingPage || '—'}</td>
@@ -56,7 +110,6 @@ export default function BatchSheet({ config, rows, onOpen, groups, emptyText }) 
     </tr>
   )
 
-  const hasGroups = Array.isArray(groups) && groups.length > 0
   const empty = hasGroups ? groups.every((g) => !g.rows?.length) : !rows?.length
 
   return (
@@ -64,13 +117,25 @@ export default function BatchSheet({ config, rows, onOpen, groups, emptyText }) 
       <table className="tracker-table">
         <thead>
           <tr>
-            <th className="tracker-th">#</th>
-            <th className="tracker-th">Date</th>
-            <th className="tracker-th">Batch Name</th>
-            <th className="tracker-th">Format</th>
-            <th className="tracker-th">Format Type</th>
-            <th className="tracker-th">Awareness</th>
-            <th className="tracker-th">Persona</th>
+            {selectable && (
+              <th className="tracker-th tracker-check">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={() => onToggleAll && onToggleAll(visibleIds, !allSelected)}
+                  aria-label="Select all visible briefs"
+                />
+              </th>
+            )}
+            <Th col={{ key: 'briefNumber', label: '#' }} />
+            <Th col={{ key: 'date', label: 'Date' }} />
+            <Th col={{ key: 'name', label: config.fieldLabels.csName || 'CS Name' }} />
+            <Th col={{ key: 'editor', label: 'Editor' }} />
+            <Th col={{ key: 'type', label: 'Format' }} />
+            <Th col={{ key: 'formatType', label: 'Format Type' }} />
+            <Th col={{ key: 'funnel', label: 'Funnel' }} />
+            <Th col={{ key: 'awareness', label: 'Awareness' }} />
+            <Th col={{ key: 'persona', label: 'Persona' }} />
             <th className="tracker-th">{config.fieldLabels.page}</th>
             <th className="tracker-th">{config.fieldLabels.landingPage}</th>
             <th className="tracker-th">Ad Concept</th>
@@ -87,13 +152,13 @@ export default function BatchSheet({ config, rows, onOpen, groups, emptyText }) 
         <tbody>
           {empty && (
             <tr>
-              <td colSpan={BATCH_SHEET_COLUMNS} className="tracker-empty-row">
+              <td colSpan={colCount} className="tracker-empty-row">
                 {emptyText || 'No batches in this period.'}
               </td>
             </tr>
           )}
           {!empty && hasGroups && groups.map((g) => (
-            <SheetGroup key={g.key} group={g} renderRow={renderRow} />
+            <SheetGroup key={g.key} group={g} renderRow={renderRow} colCount={colCount} />
           ))}
           {!empty && !hasGroups && rows.map((b, i) => renderRow(b, i))}
         </tbody>
@@ -102,12 +167,12 @@ export default function BatchSheet({ config, rows, onOpen, groups, emptyText }) 
   )
 }
 
-function SheetGroup({ group, renderRow }) {
+function SheetGroup({ group, renderRow, colCount }) {
   const [open, setOpen] = useState(true)
   return (
     <>
       <tr className="tracker-week-row" onClick={() => setOpen((o) => !o)}>
-        <td className="tracker-week-cell" colSpan={BATCH_SHEET_COLUMNS}>
+        <td className="tracker-week-cell" colSpan={colCount}>
           <span className="tracker-week-caret">{open ? '▾' : '▸'}</span>
           <span className="tracker-week-title">{group.title}</span>
           {group.subtitle && <span className="tracker-week-range">{group.subtitle}</span>}

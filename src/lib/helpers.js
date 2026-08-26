@@ -2,12 +2,35 @@ import baseConfig from '../brand.config.js'
 import { seedBriefs } from './seedBriefs.js'
 
 // Merge runtime overrides (from Settings / Manage Lists) onto brand.config defaults.
+export const UNASSIGNED_EDITOR = 'Unassigned'
+export const COPY_SUFFIX = ' - Copy'
+export const FUNNEL_VALUES = ['TOF', 'MOF', 'BOF']
+const FUNNEL_SET = new Set(FUNNEL_VALUES)
+
+export const DEFAULT_FORMAT_TYPES = {
+  Video: ['UGC', 'VSL', 'Celebrity NIL', 'Animated', 'Podcast Clip', 'Talking Head'],
+  Static: ['Product Shot', 'Lifestyle', 'Testimonial Card', 'Comparison'],
+  Native: ['Advertorial', 'Listicle', 'Confessional'],
+}
+
 export function mergedConfig(overrides = {}) {
+  const formatTypesByFormat = {
+    ...DEFAULT_FORMAT_TYPES,
+    ...(baseConfig.formatTypesByFormat || {}),
+    ...(overrides.formatTypesByFormat || {}),
+  }
+  const formatTypes = overrides.formatTypes
+    || uniqueStrings(Object.values(formatTypesByFormat).flat().concat(baseConfig.formatTypes || []))
   return {
     ...baseConfig,
     ...overrides,
     fieldLabels: { ...baseConfig.fieldLabels, ...(overrides.fieldLabels || {}) },
-    formatTypes: overrides.formatTypes || baseConfig.formatTypes || [],
+    formatTypes,
+    formatTypesByFormat,
+    funnels: overrides.funnels || baseConfig.funnels || FUNNEL_VALUES,
+    extraStrategists: overrides.extraStrategists || baseConfig.extraStrategists || [],
+    extraEditors: overrides.extraEditors || baseConfig.extraEditors || [],
+    extraAngles: overrides.extraAngles || baseConfig.extraAngles || [],
     statuses: baseConfig.statuses,
     transitions: baseConfig.transitions,
     roles: baseConfig.roles,
@@ -20,9 +43,204 @@ export function sanitize(s) {
   return String(s || '').replace(/[^a-zA-Z0-9-]/g, '')
 }
 
-// e.g. TY Batch #1
-export function briefName({ abbr, briefNumber }) {
-  return `${abbr} Batch #${briefNumber}`
+export function uniqueStrings(values) {
+  const seen = new Set()
+  const out = []
+  for (const value of values || []) {
+    const text = String(value || '').trim()
+    if (!text) continue
+    const key = text.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(text)
+  }
+  return out
+}
+
+export function isFunnelValue(value) {
+  return FUNNEL_SET.has(String(value || '').trim())
+}
+
+export function briefEditor(brief) {
+  const editor = String(brief?.editor || '').trim()
+  if (editor) return editor
+  const assigned = String(brief?.assignedTo || '').trim()
+  if (assigned) return assigned
+  return UNASSIGNED_EDITOR
+}
+
+export function briefFunnel(brief) {
+  const funnel = String(brief?.funnel || '').trim()
+  if (funnel) return funnel
+  const stage = String(brief?.awarenessStage || '').trim()
+  return isFunnelValue(stage) ? stage : ''
+}
+
+export function briefAwareness(brief) {
+  const awareness = String(brief?.awareness || '').trim()
+  if (awareness) return awareness
+  const stage = String(brief?.awarenessStage || '').trim()
+  return stage && !isFunnelValue(stage) ? stage : ''
+}
+
+export function namingFields(brief = {}) {
+  return {
+    strategist: String(brief.strategist || '').trim(),
+    editor: briefEditor(brief),
+    type: String(brief.type || '').trim(),
+    formatType: String(brief.formatType || '').trim(),
+    funnel: briefFunnel(brief),
+    awareness: briefAwareness(brief),
+    persona: String(brief.persona || '').trim(),
+    angle: String(brief.angle || '').trim(),
+  }
+}
+
+export function csNameParts(source = {}) {
+  const fields = source.strategist !== undefined && source.editor !== undefined
+    ? {
+      strategist: String(source.strategist || '').trim(),
+      editor: String(source.editor || '').trim() || UNASSIGNED_EDITOR,
+      type: String(source.type || '').trim(),
+      formatType: String(source.formatType || '').trim(),
+      funnel: String(source.funnel || '').trim(),
+      awareness: String(source.awareness || '').trim(),
+      persona: String(source.persona || '').trim(),
+      angle: String(source.angle || '').trim(),
+    }
+    : namingFields(source)
+  return [fields.strategist, fields.editor, fields.type, fields.formatType, fields.funnel, fields.awareness, fields.persona, fields.angle]
+    .filter(Boolean)
+}
+
+export function buildCsName(source = {}, { copy = false } = {}) {
+  const core = csNameParts(source).join('_')
+  if (!core) return copy ? COPY_SUFFIX.trim() : ''
+  return copy ? `${core}${COPY_SUFFIX}` : core
+}
+
+// Legacy helper kept for older tests/callers — CS names are field-driven.
+export function briefName(source) {
+  if (source?.abbr && source?.briefNumber && !source?.strategist && !source?.type) {
+    return `${source.abbr} Batch #${source.briefNumber}`
+  }
+  return buildCsName(source)
+}
+
+export function formatTypeOptionsFor(config, format, extra = []) {
+  const byFormat = config?.formatTypesByFormat || DEFAULT_FORMAT_TYPES
+  const listed = format ? (byFormat[format] || []) : []
+  return uniqueStrings([...listed, ...extra])
+}
+
+export function isFormatTypeValid(config, format, formatType) {
+  if (!formatType) return !formatType
+  return formatTypeOptionsFor(config, format).some((option) => option.toLowerCase() === String(formatType).toLowerCase())
+}
+
+export function withCsName(brief, { copy } = {}) {
+  const fields = namingFields(brief)
+  const isCopy = copy ?? Boolean(brief?.nameIsCopy)
+  return {
+    ...brief,
+    ...fields,
+    awarenessStage: fields.awareness || brief?.awarenessStage || '',
+    name: buildCsName(fields, { copy: isCopy }),
+    nameIsCopy: isCopy,
+  }
+}
+
+export function applyNamingPatch(brief, patch, { by, config } = {}) {
+  const now = Date.now()
+  const prevEditor = briefEditor(brief)
+  const prevFields = namingFields(brief)
+  let next = { ...brief, ...patch, updatedAt: now }
+  if (patch.type && patch.type !== brief.type && patch.formatType === undefined) {
+    next.formatType = ''
+  }
+  if (config && next.formatType && !isFormatTypeValid(config, next.type, next.formatType)) {
+    next.formatType = ''
+  }
+  const nextFields = namingFields(next)
+  const namingChanged = JSON.stringify(prevFields) !== JSON.stringify(nextFields)
+  const isCopy = namingChanged ? false : Boolean(brief.nameIsCopy)
+  next = withCsName({ ...next, nameIsCopy: isCopy }, { copy: isCopy })
+  const history = [...(brief.history || [])]
+  if (next.editor && next.editor !== prevEditor) {
+    history.push({
+      kind: 'editor',
+      from: prevEditor,
+      to: next.editor,
+      by: by || 'System',
+      at: now,
+      note: `Editor: ${prevEditor} → ${next.editor}`,
+    })
+    if (next.editor !== UNASSIGNED_EDITOR) next.assignedTo = next.editor
+  }
+  next.history = history
+  return next
+}
+
+export function duplicateBrief(brief, { by, briefs = [] } = {}) {
+  const now = Date.now()
+  const copy = withCsName({
+    ...brief,
+    id: uuid(),
+    briefNumber: nextBriefNumber(briefs),
+    createdAt: now,
+    updatedAt: now,
+    launchedAt: null,
+    status: 'scripting',
+    result: '',
+    postId: '',
+    learnings: brief.learnings || '',
+    nameIsCopy: true,
+    history: [{ status: 'scripting', by: by || 'System', at: now, note: `Duplicated from ${brief.name || 'brief'}` }],
+  }, { copy: true })
+  return copy
+}
+
+export function batchNamingPreview(briefs, patch, { config } = {}) {
+  return briefs.map((brief) => {
+    const next = applyNamingPatch(brief, patch, { config })
+    return { id: brief.id, oldName: brief.name || buildCsName(brief), newName: next.name, next }
+  })
+}
+
+export function strategistNames(config, briefs = []) {
+  const roles = new Set(['strategist', 'creative_strategist', 'operator', 'cfo'])
+  return uniqueStrings([
+    ...(config.users || []).filter((u) => roles.has(u.role)).map((u) => u.name),
+    ...(config.extraStrategists || []),
+    ...briefs.map((b) => b.strategist),
+  ])
+}
+
+export function editorNames(config, briefs = []) {
+  return uniqueStrings([
+    UNASSIGNED_EDITOR,
+    ...(config.users || []).filter((u) => u.role === 'video_editor').map((u) => u.name),
+    ...(config.extraEditors || []),
+    ...briefs.map((b) => b.editor || b.assignedTo),
+  ])
+}
+
+export function angleOptions(config, briefs = []) {
+  return uniqueStrings([
+    ...(config.extraAngles || []),
+    ...briefs.map((b) => b.angle),
+  ])
+}
+
+export function csNameSearchHaystack(brief) {
+  const fields = namingFields(brief)
+  return [buildCsName(fields), brief.name, ...Object.values(fields)].filter(Boolean).join(' ').toLowerCase()
+}
+
+export function matchesCsNameQuery(brief, query) {
+  const q = String(query || '').trim().toLowerCase()
+  if (!q) return true
+  return csNameSearchHaystack(brief).includes(q)
 }
 
 export function nextBriefNumber(briefs) {
@@ -124,17 +342,7 @@ export function briefsInPeriod(briefs, period, key) {
 }
 
 export function formatTypeOptions(config, extra = []) {
-  const seen = new Set()
-  const out = []
-  for (const value of [...(config.formatTypes || []), ...extra]) {
-    const text = String(value || '').trim()
-    if (!text) continue
-    const key = text.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    out.push(text)
-  }
-  return out
+  return uniqueStrings([...(config.formatTypes || []), ...extra])
 }
 
 export function importMissingBriefs(existingBriefs) {
@@ -145,13 +353,15 @@ export function importMissingBriefs(existingBriefs) {
   for (const seed of seedBriefs) {
     if (existingNumbers.has(seed.batchNumber)) continue
     const now = Date.now()
-    toAdd.push({
+    toAdd.push(withCsName({
       id: uuid(),
-      name: seed.name,
       strategist: seed.strategist,
+      editor: UNASSIGNED_EDITOR,
       date: seed.date,
-      persona: '',
-      awarenessStage: seed.awarenessStage,
+      persona: seed.persona || '',
+      funnel: isFunnelValue(seed.awarenessStage) ? seed.awarenessStage : (seed.funnel || ''),
+      awareness: seed.awareness || (isFunnelValue(seed.awarenessStage) ? '' : (seed.awarenessStage || '')),
+      awarenessStage: isFunnelValue(seed.awarenessStage) ? '' : (seed.awarenessStage || ''),
       type: seed.type,
       formatType: seed.formatType,
       adConcept: seed.adConcept,
@@ -163,14 +373,14 @@ export function importMissingBriefs(existingBriefs) {
       ugcAssetsLink: '',
       postId: seed.postId,
       learnings: seed.learnings,
-      assignedTo: null,
+      assignedTo: seed.assignedTo || null,
       status: seed.status,
       briefNumber: seed.batchNumber,
       createdAt: now,
       updatedAt: now,
       launchedAt: seed.status === 'launched' ? now : null,
       history: [{ status: seed.status, by: 'Import', at: now, note: 'Imported from Creative Tracker' }],
-    })
+    }))
   }
   return toAdd
 }
@@ -201,13 +411,29 @@ export function applyTransition(brief, transition, { by, note, assignTo }) {
   const now = Date.now()
   const entry = { status: transition.to, by, at: now }
   if (note) entry.note = note
-  return {
+  const history = [...(brief.history || []), entry]
+  const prevEditor = briefEditor(brief)
+  let next = {
     ...brief,
     status: transition.to,
     assignedTo: transition.needsAssignment ? assignTo : brief.assignedTo,
     launchedAt: transition.to === 'launched' ? now : brief.launchedAt,
     result: transition.to === 'launched' ? 'Testing' : brief.result,
     updatedAt: now,
-    history: [...(brief.history || []), entry],
   }
+  if (transition.needsAssignment && assignTo && assignTo !== prevEditor) {
+    next.editor = assignTo
+    next.assignedTo = assignTo
+    next.nameIsCopy = false
+    history.push({
+      kind: 'editor',
+      from: prevEditor,
+      to: assignTo,
+      by,
+      at: now,
+      note: `Editor: ${prevEditor} → ${assignTo}`,
+    })
+  }
+  next.history = history
+  return withCsName(next)
 }

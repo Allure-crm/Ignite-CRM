@@ -1,16 +1,16 @@
-import { formatTypeOptions } from '../lib/helpers'
+import { formatTypeOptionsFor } from '../lib/helpers'
 
-export default function FormatTypeField({ config, value, onChange, extraOptions = [] }) {
-  const pills = formatTypeOptions(config, [value])
-  const suggestions = formatTypeOptions(config, extraOptions.concat(value || ''))
-  const listId = 'format-type-suggestions'
+export default function FormatTypeField({ config, format, value, onChange }) {
+  const options = formatTypeOptionsFor(config, format, value ? [value] : [])
 
   return (
     <div className="field">
       <label>{config.fieldLabels.formatType}</label>
-      {pills.length > 0 && (
+      {!format ? (
+        <div className="field-hint">Select a format first</div>
+      ) : (
         <div className="choice-row">
-          {pills.map((option) => (
+          {options.map((option) => (
             <button
               type="button"
               key={option}
@@ -22,18 +22,6 @@ export default function FormatTypeField({ config, value, onChange, extraOptions 
           ))}
         </div>
       )}
-      <input
-        type="text"
-        list={listId}
-        placeholder="e.g. AI Animated, Broll + VO, UGC-Style…"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      <datalist id={listId}>
-        {suggestions.map((option) => (
-          <option key={option} value={option} />
-        ))}
-      </datalist>
     </div>
   )
 }
