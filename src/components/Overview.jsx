@@ -4,23 +4,23 @@ import {
   weekStartKey,
   weekRangeLabel,
   addDays,
+  addMonths,
   dayLabel,
+  monthKey,
+  monthLabel,
   briefsInPeriod,
   PIPELINE_LANES,
-  matchesCsNameQuery,
+  formatByWeekMatrix,
 } from '../lib/helpers'
-import BatchSheet from './BatchSheet'
+import FormatByWeek from './FormatByWeek'
 import BriefCard from './BriefCard'
 
-export default function Overview({ config, user, briefs, onOpen, onAction, onBatchEdit }) {
+export default function Overview({ config, user, briefs, onOpen, onAction }) {
   const [period, setPeriod] = useState('weekly') // 'daily' | 'weekly'
   const [mode, setMode] = useState('summary') // 'pipeline' | 'summary'
   const [daySel, setDaySel] = useState(null)
   const [weekSel, setWeekSel] = useState(null)
-  const [csQuery, setCsQuery] = useState('')
-  const [selected, setSelected] = useState(() => new Set())
-  const [sortKey, setSortKey] = useState('briefNumber')
-  const [sortDir, setSortDir] = useState('asc')
+  const [monthSel, setMonthSel] = useState(null)
 
   const weeksWithData = useMemo(() => {
     const keys = new Set(briefs.map((b) => weekStartKey(b.date)).filter(Boolean))
@@ -38,39 +38,31 @@ export default function Overview({ config, user, briefs, onOpen, onAction, onBat
     [briefs]
   )
 
+  const monthsWithData = useMemo(
+    () => [...new Set(briefs.map((b) => monthKey(b.date)).filter(Boolean))].sort().reverse(),
+    [briefs]
+  )
+
+  const months = useMemo(() => {
+    const keys = new Set(monthsWithData)
+    keys.add(monthKey(todayKey()))
+    return [...keys].sort().reverse()
+  }, [monthsWithData])
+
   const day = daySel ?? days[0] ?? todayKey()
   const week = weekSel ?? weeksWithData[0] ?? weekStartKey(todayKey())
+  const month = monthSel ?? monthsWithData[0] ?? monthKey(todayKey())
 
   const periodKey = period === 'daily' ? day : week
-  const scoped = useMemo(() => {
-    const list = briefsInPeriod(briefs, period, periodKey).filter((b) => matchesCsNameQuery(b, csQuery))
-    const dir = sortDir === 'desc' ? -1 : 1
-    return [...list].sort((a, b) => {
-      if (sortKey === 'briefNumber') return ((a.briefNumber || 0) - (b.briefNumber || 0)) * dir
-      const av = a[sortKey] ?? ''
-      const bv = b[sortKey] ?? ''
-      return String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' }) * dir
-    })
-  }, [briefs, period, periodKey, csQuery, sortKey, sortDir])
+  const scoped = useMemo(
+    () => briefsInPeriod(briefs, period, periodKey),
+    [briefs, period, periodKey]
+  )
 
-  const dailyGroups = useMemo(() => {
-    if (period !== 'weekly') return null
-    const map = new Map()
-    for (const b of scoped) {
-      const key = b.date || 'undated'
-      if (!map.has(key)) map.set(key, [])
-      map.get(key).push(b)
-    }
-    return [...map.entries()]
-      .sort(([a], [b]) => (a < b ? -1 : 1))
-      .map(([key, rows]) => ({
-        key,
-        title: key === 'undated' ? 'No date set' : dayLabel(key),
-        rows,
-      }))
-  }, [period, scoped])
+  const matrix = useMemo(() => formatByWeekMatrix(briefs, month), [briefs, month])
 
   const periodLabel = period === 'daily' ? dayLabel(day) : `Week of ${weekRangeLabel(week)}`
+  const summaryLabel = monthLabel(month)
 
   const onPeriodChange = (next) => {
     setPeriod(next)
@@ -83,13 +75,19 @@ export default function Overview({ config, user, briefs, onOpen, onAction, onBat
       <div className="topbar">
         <div>
           <h1>Summary</h1>
-          <div className="sub">{periodLabel} · {scoped.length} batch{scoped.length === 1 ? '' : 'es'}</div>
+          <div className="sub">
+            {mode === 'summary'
+              ? `${summaryLabel} · ${matrix.total} batch${matrix.total === 1 ? '' : 'es'}`
+              : `${periodLabel} · ${scoped.length} batch${scoped.length === 1 ? '' : 'es'}`}
+          </div>
         </div>
         <div className="ov-controls">
-          <select className="ov-select" value={period} onChange={(e) => onPeriodChange(e.target.value)}>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-          </select>
+          {mode === 'pipeline' && (
+            <select className="ov-select" value={period} onChange={(e) => onPeriodChange(e.target.value)}>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          )}
           <div className="seg" role="tablist" aria-label="View mode">
             <button
               className={mode === 'pipeline' ? 'on' : ''}
@@ -104,89 +102,62 @@ export default function Overview({ config, user, briefs, onOpen, onAction, onBat
               Summary
             </button>
           </div>
-          {mode === 'summary' && (
-            <input
-              className="search"
-              placeholder="Search CS Name…"
-              value={csQuery}
-              onChange={(e) => setCsQuery(e.target.value)}
-            />
-          )}
         </div>
       </div>
 
       <div className="content">
-        <div className="ov-period-nav">
-          {period === 'daily' ? (
-            <>
-              <button className="ov-step" onClick={() => setDaySel(addDays(day, -1))} aria-label="Previous day">‹</button>
-              <input type="date" value={day} onChange={(e) => setDaySel(e.target.value)} />
-              <button className="ov-step" onClick={() => setDaySel(addDays(day, 1))} aria-label="Next day">›</button>
-              <button className="ov-today" onClick={() => setDaySel(todayKey())}>Today</button>
-            </>
-          ) : (
-            <>
-              <button
-                className="ov-step"
-                onClick={() => setWeekSel(addDays(week, -7))}
-                aria-label="Previous week"
-              >
-                ‹
-              </button>
-              <select className="ov-select" value={week} onChange={(e) => setWeekSel(e.target.value)}>
-                {weeks.map((w) => (
-                  <option key={w} value={w}>{weekRangeLabel(w)}</option>
+        {mode === 'summary' ? (
+          <>
+            <div className="ov-period-nav">
+              <button className="ov-step" onClick={() => setMonthSel(addMonths(month, -1))} aria-label="Previous month">‹</button>
+              <select className="ov-select" value={month} onChange={(e) => setMonthSel(e.target.value)}>
+                {months.map((m) => (
+                  <option key={m} value={m}>{monthLabel(m)}</option>
                 ))}
-                {!weeks.includes(week) && <option value={week}>{weekRangeLabel(week)}</option>}
+                {!months.includes(month) && <option value={month}>{monthLabel(month)}</option>}
               </select>
-              <button
-                className="ov-step"
-                onClick={() => setWeekSel(addDays(week, 7))}
-                aria-label="Next week"
-              >
-                ›
-              </button>
-              <button className="ov-today" onClick={() => setWeekSel(weekStartKey(todayKey()))}>This week</button>
-            </>
-          )}
-        </div>
-
-        {mode === 'pipeline' ? (
-          <PipelineBoard config={config} user={user} briefs={scoped} onOpen={onOpen} onAction={onAction} />
+              <button className="ov-step" onClick={() => setMonthSel(addMonths(month, 1))} aria-label="Next month">›</button>
+              <button className="ov-today" onClick={() => setMonthSel(monthKey(todayKey()))}>This month</button>
+            </div>
+            <FormatByWeek matrix={matrix} />
+          </>
         ) : (
           <>
-            {selected.size > 0 && (
-              <div className="batch-bar">
-                <span>{selected.size} selected</span>
-                <button className="btn-small" onClick={() => onBatchEdit(selected)}>Batch edit naming</button>
-                <button className="filter-clear" onClick={() => setSelected(new Set())}>Clear selection</button>
-              </div>
-            )}
-            <BatchSheet
-              config={config}
-              rows={scoped}
-              groups={dailyGroups}
-              onOpen={onOpen}
-              selected={selected}
-              onToggle={(id) => setSelected((prev) => {
-                const next = new Set(prev)
-                if (next.has(id)) next.delete(id)
-                else next.add(id)
-                return next
-              })}
-              onToggleAll={(ids, on) => setSelected((prev) => {
-                const next = new Set(prev)
-                ids.forEach((id) => { if (on) next.add(id); else next.delete(id) })
-                return next
-              })}
-              sortKey={sortKey}
-              sortDir={sortDir}
-              onSort={(key) => {
-                if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-                else { setSortKey(key); setSortDir('asc') }
-              }}
-              emptyText={`No batches inputted ${period === 'daily' ? 'on this day' : 'this week'}.`}
-            />
+            <div className="ov-period-nav">
+              {period === 'daily' ? (
+                <>
+                  <button className="ov-step" onClick={() => setDaySel(addDays(day, -1))} aria-label="Previous day">‹</button>
+                  <input type="date" value={day} onChange={(e) => setDaySel(e.target.value)} />
+                  <button className="ov-step" onClick={() => setDaySel(addDays(day, 1))} aria-label="Next day">›</button>
+                  <button className="ov-today" onClick={() => setDaySel(todayKey())}>Today</button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="ov-step"
+                    onClick={() => setWeekSel(addDays(week, -7))}
+                    aria-label="Previous week"
+                  >
+                    ‹
+                  </button>
+                  <select className="ov-select" value={week} onChange={(e) => setWeekSel(e.target.value)}>
+                    {weeks.map((w) => (
+                      <option key={w} value={w}>{weekRangeLabel(w)}</option>
+                    ))}
+                    {!weeks.includes(week) && <option value={week}>{weekRangeLabel(week)}</option>}
+                  </select>
+                  <button
+                    className="ov-step"
+                    onClick={() => setWeekSel(addDays(week, 7))}
+                    aria-label="Next week"
+                  >
+                    ›
+                  </button>
+                  <button className="ov-today" onClick={() => setWeekSel(weekStartKey(todayKey()))}>This week</button>
+                </>
+              )}
+            </div>
+            <PipelineBoard config={config} user={user} briefs={scoped} onOpen={onOpen} onAction={onAction} />
           </>
         )}
       </div>

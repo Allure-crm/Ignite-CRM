@@ -317,6 +317,87 @@ export function addDays(key, n) {
   return toDayKey(dt)
 }
 
+export function addMonths(month, n) {
+  const [y, m] = String(month || '').split('-').map(Number)
+  if (!y || !m) return ''
+  const dt = new Date(y, m - 1 + n, 1)
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`
+}
+
+export function monthBounds(month) {
+  const [y, m] = String(month || '').split('-').map(Number)
+  if (!y || !m) return { first: '', last: '' }
+  const first = `${y}-${String(m).padStart(2, '0')}-01`
+  const lastDay = new Date(y, m, 0).getDate()
+  const last = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  return { first, last }
+}
+
+export function weekColumnLabel(weekNum, startKey, endKey) {
+  const start = parseDay(startKey)
+  const end = parseDay(endKey)
+  if (!start || !end) return `W${weekNum}`
+  const mon = MONTHS[start.getMonth()]
+  const a = start.getDate()
+  const b = end.getDate()
+  if (a === b && monthKey(startKey) === monthKey(endKey)) return `W${weekNum} ${mon} ${a}`
+  return `W${weekNum} ${mon} ${a}-${b}`
+}
+
+// Monday-start weeks that overlap `YYYY-MM`, clipped to the month for labels.
+export function weeksOverlappingMonth(month) {
+  const { first, last } = monthBounds(month)
+  if (!first || !last) return []
+  const weeks = []
+  let start = weekStartKey(first)
+  let n = 1
+  while (start && start <= last) {
+    const fullEnd = addDays(start, 6)
+    const clipStart = start < first ? first : start
+    const clipEnd = fullEnd > last ? last : fullEnd
+    weeks.push({
+      key: start,
+      weekNum: n,
+      start: clipStart,
+      end: clipEnd,
+      label: weekColumnLabel(n, clipStart, clipEnd),
+    })
+    n += 1
+    start = addDays(start, 7)
+  }
+  return weeks
+}
+
+export function formatByWeekHighlightAt(maxWeekly) {
+  if (!maxWeekly || maxWeekly <= 0) return Infinity
+  return Math.max(4, Math.ceil(maxWeekly * 0.15))
+}
+
+// Count batches per format type across weeks in a month. Empty format types are "Unspecified".
+export function formatByWeekMatrix(briefs, month) {
+  const weeks = weeksOverlappingMonth(month)
+  const monthBriefs = (briefs || []).filter((b) => monthKey(b.date) === month)
+  const formatKey = (b) => String(b.formatType || '').trim() || 'Unspecified'
+  const formats = uniqueStrings(monthBriefs.map(formatKey)).sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+  )
+  const rows = formats.map((format) => {
+    const counts = weeks.map((w) =>
+      monthBriefs.filter((b) => formatKey(b).toLowerCase() === format.toLowerCase() && weekStartKey(b.date) === w.key).length
+    )
+    const mtd = counts.reduce((sum, n) => sum + n, 0)
+    return { format, counts, mtd }
+  }).filter((row) => row.mtd > 0)
+  const maxWeekly = rows.reduce((max, row) => Math.max(max, ...row.counts), 0)
+  return {
+    weeks,
+    rows,
+    total: monthBriefs.length,
+    maxWeekly,
+    highlightAt: formatByWeekHighlightAt(maxWeekly),
+  }
+}
+
 export function dayLabel(key) {
   const dt = parseDay(key)
   if (!dt) return key || ''
