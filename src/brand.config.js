@@ -32,7 +32,7 @@ export default {
 
   // Role definitions: label + which status lanes appear in "My Queue"
   roles: {
-    operator:            { label: 'Operator',            queue: ['scripting', 'script_review', 'script_revision', 'assign_editor', 'needs_editing', 'needs_review', 'needs_revision', 'ugc_content_needed', 'ugc_content_review', 'ugc_content_approved', 'ugc_content_revision', 'ready_to_launch'] },
+    operator:            { label: 'Operator',            queue: [] }, // Overview only — operator is not working briefs in a personal queue
     cfo:                 { label: 'Chief Fun Officer',   queue: ['script_review', 'scripting', 'script_revision', 'assign_editor', 'needs_editing', 'needs_review', 'needs_revision', 'ugc_content_needed', 'ugc_content_review', 'ugc_content_approved', 'ugc_content_revision', 'ready_to_launch'] },
     creative_strategist: { label: 'Creative Strategist', queue: ['scripting', 'assign_editor', 'needs_review', 'ugc_content_review', 'ugc_content_revision'] },
     video_editor:        { label: 'Video Editor',        queue: ['needs_editing', 'needs_revision'] },
