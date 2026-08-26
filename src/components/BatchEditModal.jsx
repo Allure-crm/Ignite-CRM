@@ -42,7 +42,7 @@ export default function BatchEditModal({ config, briefs, selected, onClose, onAp
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
-          <p className="batch-help">Leave a field on “Keep current” to skip it. CS Name regenerates for every affected brief.</p>
+          <p className="batch-help">Leave a field on “Keep current” to skip it. Ad Name regenerates for every affected brief and keeps its unique batch number (1, 2, 3…) so names cannot collide.</p>
 
           <div className="batch-fields">
             <FieldSelect
