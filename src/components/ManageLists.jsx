@@ -9,7 +9,10 @@ export default function ManageLists({ config, overrides, onClose, onSave }) {
     pages: config.pages,
     landingPages: config.landingPages,
     types: config.types,
+    funnels: config.funnels || ['TOF', 'MOF', 'BOF'],
+    awarenessStages: config.awarenessStages,
     formatTypes: config.formatTypes || [],
+    formatTypesByFormat: { ...(config.formatTypesByFormat || {}) },
     users: config.users,
     brandName: config.brandName,
     brandTagline: config.brandTagline,
@@ -17,6 +20,7 @@ export default function ManageLists({ config, overrides, onClose, onSave }) {
     accentColor2: config.accentColor2,
   })
   const [input, setInput] = useState('')
+  const [formatForType, setFormatForType] = useState((config.types || ['Video'])[0] || 'Video')
   const defaultRole = Object.keys(config.roles)[0] || 'creative_strategist'
   const [newUser, setNewUser] = useState({ name: '', role: defaultRole, abbr: '' })
 
@@ -24,6 +28,8 @@ export default function ManageLists({ config, overrides, onClose, onSave }) {
 
   const listTabs = [
     { key: 'personas', label: config.fieldLabels.persona + 's' },
+    { key: 'funnels', label: 'Funnels' },
+    { key: 'awarenessStages', label: 'Awareness' },
     { key: 'pages', label: config.fieldLabels.page + 's' },
     { key: 'landingPages', label: config.fieldLabels.landingPage + 's' },
     { key: 'types', label: 'Formats' },
@@ -36,6 +42,20 @@ export default function ManageLists({ config, overrides, onClose, onSave }) {
     const v = input.trim()
     if (!v || draft[tab].includes(v)) return
     set(tab, [...draft[tab], v])
+    setInput('')
+  }
+
+  const addFormatType = () => {
+    const v = input.trim()
+    if (!v) return
+    const current = draft.formatTypesByFormat[formatForType] || []
+    if (current.includes(v)) return
+    const nextByFormat = { ...draft.formatTypesByFormat, [formatForType]: [...current, v] }
+    setDraft((d) => ({
+      ...d,
+      formatTypesByFormat: nextByFormat,
+      formatTypes: [...new Set(Object.values(nextByFormat).flat())],
+    }))
     setInput('')
   }
 
@@ -59,7 +79,7 @@ export default function ManageLists({ config, overrides, onClose, onSave }) {
           ))}
         </div>
         <div className="modal-body">
-          {['personas', 'pages', 'landingPages', 'types', 'formatTypes'].includes(tab) && (
+          {['personas', 'pages', 'landingPages', 'types', 'funnels', 'awarenessStages'].includes(tab) && (
             <>
               <div className="add-row">
                 <input
@@ -77,6 +97,40 @@ export default function ManageLists({ config, overrides, onClose, onSave }) {
                 <div className="list-item" key={item}>
                   {item}
                   <button className="del" onClick={() => set(tab, draft[tab].filter((x) => x !== item))}>✕</button>
+                </div>
+              ))}
+            </>
+          )}
+
+          {tab === 'formatTypes' && (
+            <>
+              <div className="add-row">
+                <select className="search" value={formatForType} onChange={(e) => setFormatForType(e.target.value)}>
+                  {draft.types.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <input
+                  type="text"
+                  className="search"
+                  style={{ width: '100%' }}
+                  placeholder={`Add ${formatForType} format type…`}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addFormatType()}
+                />
+                <button className="btn-small" onClick={addFormatType}>+ Add</button>
+              </div>
+              {(draft.formatTypesByFormat[formatForType] || []).map((item) => (
+                <div className="list-item" key={item}>
+                  {item}
+                  <button className="del" onClick={() => {
+                    const nextList = (draft.formatTypesByFormat[formatForType] || []).filter((x) => x !== item)
+                    const nextByFormat = { ...draft.formatTypesByFormat, [formatForType]: nextList }
+                    setDraft((d) => ({
+                      ...d,
+                      formatTypesByFormat: nextByFormat,
+                      formatTypes: [...new Set(Object.values(nextByFormat).flat())],
+                    }))
+                  }}>✕</button>
                 </div>
               ))}
             </>

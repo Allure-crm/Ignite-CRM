@@ -1,12 +1,17 @@
 // Workflow smoke test — run with: node smoke.test.mjs
 // Validates the brand.config workflow definition after you customize it.
-import { briefName, nextBriefNumber, applyTransition, mergedConfig, formatTypeOptions, importMissingBriefs, allowedTransitions, canCreateBriefs, canDeleteBriefs } from './src/lib/helpers.js'
+const origAssert = console.assert.bind(console)
+console.assert = (cond, msg) => {
+  origAssert(cond, msg)
+  if (!cond) throw new Error(msg || 'assertion failed')
+}
+import { briefName, nextBriefNumber, applyTransition, mergedConfig, formatTypeOptions, formatTypeOptionsFor, importMissingBriefs, allowedTransitions, canCreateBriefs, canDeleteBriefs, buildCsName, applyNamingPatch, duplicateBrief, withCsName, matchesCsNameQuery, UNASSIGNED_EDITOR } from './src/lib/helpers.js'
 import { resolveSupabaseCreds, postgresUrl } from './src/lib/supabaseEnv.js'
 import { briefsToCsv } from './src/lib/exportSheet.js'
 import config from './src/brand.config.js'
 
-const n = briefName({ abbr: 'TY', date: '2026-06-01', briefNumber: 2, persona: 'Persona A', awarenessStage: 'TOF', type: 'Static', landingPage: 'PDP' })
-console.assert(n === 'TY Batch #2', 'name gen FAILED: ' + n)
+const n = briefName({ strategist: 'TY', editor: 'Unassigned', type: 'Static', funnel: 'TOF', persona: 'Persona A' })
+console.assert(n === 'TY_Unassigned_Static_TOF_Persona A', 'name gen FAILED: ' + n)
 
 console.assert(nextBriefNumber([{ briefNumber: 5 }, { briefNumber: 2 }]) === 6, 'numbering FAILED')
 
@@ -77,7 +82,9 @@ console.assert(skipped.every((row) => row.briefNumber !== 1 && row.briefNumber !
 const mergedTypes = mergedConfig({ formatTypes: ['Custom Type'] })
 console.assert(mergedTypes.formatTypes[0] === 'Custom Type' && mergedTypes.types.length, 'formatTypes merge FAILED')
 const mergedKeep = mergedConfig({})
-console.assert(mergedKeep.formatTypes.includes('AI Animated'), 'default formatTypes FAILED')
+console.assert(mergedKeep.formatTypes.includes('UGC') && mergedKeep.formatTypesByFormat.Video.includes('Celebrity NIL'), 'default formatTypes FAILED')
+console.assert(mergedKeep.personas.includes('Second-Act Single') && mergedKeep.funnels.includes('TOF'), 'naming lists FAILED')
+console.assert(mergedKeep.awarenessStages.includes('Problem Aware'), 'awareness list FAILED')
 
 console.assert(!canCreateBriefs('video_editor') && canCreateBriefs('creative_strategist'), 'create briefs permission FAILED')
 console.assert(!canDeleteBriefs('video_editor') && canDeleteBriefs('operator'), 'delete briefs permission FAILED')
@@ -91,5 +98,56 @@ const editorResubmit = allowedTransitions(config, 'needs_revision', 'video_edito
 console.assert(editorResubmit.length === 1 && editorResubmit[0].to === 'needs_review', 'editor resubmit FAILED')
 const stratApprove = allowedTransitions(config, 'needs_review', 'creative_strategist')
 console.assert(stratApprove.some((t) => t.label === 'Approve'), 'strategist approve FAILED')
+
+const fullName = buildCsName({
+  strategist: 'Tysin',
+  editor: 'Marcus',
+  type: 'Video',
+  formatType: 'Celebrity NIL',
+  funnel: 'TOF',
+  awareness: 'Problem Aware',
+  persona: 'Second-Act Single',
+  angle: 'Celebrity Endorsement',
+})
+console.assert(fullName === 'Tysin_Marcus_Video_Celebrity NIL_TOF_Problem Aware_Second-Act Single_Celebrity Endorsement', 'cs name FAILED: ' + fullName)
+
+const partialName = buildCsName({ strategist: 'Tysin', editor: UNASSIGNED_EDITOR, type: 'Video' })
+console.assert(partialName === 'Tysin_Unassigned_Video', 'partial cs name FAILED: ' + partialName)
+console.assert(!partialName.includes('__'), 'double underscore FAILED')
+
+const videoTypes = formatTypeOptionsFor(config, 'Video')
+console.assert(videoTypes.includes('UGC') && videoTypes.includes('Celebrity NIL') && !videoTypes.includes('Product Shot'), 'video format types FAILED')
+const staticTypes = formatTypeOptionsFor(config, 'Static')
+console.assert(staticTypes.includes('Product Shot') && !staticTypes.includes('UGC'), 'static format types FAILED')
+
+const patched = applyNamingPatch(
+  { name: 'Mia_Unassigned_Video_UGC', strategist: 'Mia', editor: UNASSIGNED_EDITOR, type: 'Video', formatType: 'UGC', funnel: 'TOF', history: [] },
+  { type: 'Static' },
+  { config, by: 'Mia' }
+)
+console.assert(patched.formatType === '' && patched.type === 'Static', 'format type reset FAILED')
+
+const reassigned = applyNamingPatch(patched, { editor: 'Zain' }, { by: 'Mia' })
+console.assert(reassigned.editor === 'Zain' && reassigned.name.includes('Zain'), 'editor rename FAILED: ' + reassigned.name)
+console.assert(reassigned.history.some((h) => h.kind === 'editor' && h.from === UNASSIGNED_EDITOR && h.to === 'Zain'), 'editor audit FAILED')
+
+const assignedName = applyTransition(
+  { id: 'ed', status: 'assign_editor', history: [], editor: UNASSIGNED_EDITOR, strategist: 'Mia', type: 'Video' },
+  config.transitions.assign_editor[0],
+  { by: 'T', assignTo: 'Zain' }
+)
+console.assert(assignedName.editor === 'Zain' && assignedName.name.includes('Zain'), 'assign editor naming FAILED: ' + assignedName.name)
+
+const copied = duplicateBrief({ id: 'x', name: fullName, strategist: 'Tysin', editor: 'Marcus', type: 'Video', formatType: 'Celebrity NIL', funnel: 'TOF', awareness: 'Problem Aware', persona: 'Second-Act Single', angle: 'Celebrity Endorsement', status: 'launched', briefNumber: 9, history: [] }, { by: 'Mia', briefs: [{ briefNumber: 9 }] })
+console.assert(copied.name.endsWith(' - Copy') && copied.nameIsCopy && copied.strategist === 'Tysin', 'duplicate copy FAILED: ' + copied.name)
+const afterEdit = applyNamingPatch(copied, { angle: 'New Angle' }, { by: 'Mia' })
+console.assert(!afterEdit.nameIsCopy && !afterEdit.name.endsWith(' - Copy'), 'copy suffix persist FAILED: ' + afterEdit.name)
+
+const legacy = withCsName({ strategist: 'Mia', awarenessStage: 'TOF', type: 'Video', formatType: 'UGC' })
+console.assert(legacy.funnel === 'TOF' && legacy.awareness === '' && legacy.name.includes('TOF'), 'legacy funnel migrate FAILED: ' + legacy.name)
+
+console.assert(matchesCsNameQuery(legacy, 'TOF') && matchesCsNameQuery(legacy, 'video') && !matchesCsNameQuery(legacy, 'BOF'), 'cs search FAILED')
+
+console.assert(csv.includes('CS Name'), 'csv header cs name FAILED')
 
 console.log('ALL SMOKE TESTS PASSED — path:', ['scripting', ...path].join(' > '))

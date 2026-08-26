@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { store, loadUser, saveUser, isSupabase, loadUnlocked, saveUnlocked } from './lib/store'
-import { mergedConfig, applyTransition, allowedTransitions, canCreateBriefs, canDeleteBriefs } from './lib/helpers'
+import {
+  mergedConfig,
+  applyTransition,
+  allowedTransitions,
+  canCreateBriefs,
+  canDeleteBriefs,
+  withCsName,
+  duplicateBrief,
+  UNASSIGNED_EDITOR,
+} from './lib/helpers'
 import Sidebar from './components/Sidebar'
 import Board from './components/Board'
 import NewBriefModal from './components/NewBriefModal'
@@ -12,6 +21,7 @@ import Tracker from './components/Tracker'
 import WeeklyIntake from './components/WeeklyIntake'
 import Overview from './components/Overview'
 import AccessGate from './components/AccessGate'
+import BatchEditModal from './components/BatchEditModal'
 
 export default function App() {
   const [briefs, setBriefs] = useState([])
@@ -29,7 +39,7 @@ export default function App() {
 
   const refresh = useCallback(() => {
     store.init().then(({ briefs, overrides, intakes }) => {
-      setBriefs(briefs)
+      setBriefs((briefs || []).map((b) => withCsName(b)))
       setOverrides(overrides)
       setIntakes(intakes || [])
       setStoreError('')
@@ -73,10 +83,35 @@ export default function App() {
   }
 
   const upsert = async (brief) => {
-    const exists = briefs.some((b) => b.id === brief.id)
-    const all = exists ? briefs.map((b) => (b.id === brief.id ? brief : b)) : [...briefs, brief]
+    const next = withCsName(brief)
+    const exists = briefs.some((b) => b.id === next.id)
+    const all = exists ? briefs.map((b) => (b.id === next.id ? next : b)) : [...briefs, next]
     setBriefs(all)
-    await persist(() => store.upsertBrief(brief, all))
+    await persist(() => store.upsertBrief(next, all))
+  }
+
+  const upsertMany = async (updated) => {
+    const map = new Map(updated.map((b) => [b.id, withCsName(b)]))
+    const all = briefs.map((b) => map.get(b.id) || b)
+    setBriefs(all)
+    await persist(async () => {
+      for (const brief of map.values()) await store.upsertBrief(brief, all)
+    })
+  }
+
+  const rememberName = (kind, value) => {
+    const name = String(value || '').trim()
+    if (!name || name === UNASSIGNED_EDITOR) return
+    const key = kind === 'editor' ? 'extraEditors' : kind === 'angle' ? 'extraAngles' : 'extraStrategists'
+    const current = overrides[key] || config[key] || []
+    if (current.some((v) => String(v).toLowerCase() === name.toLowerCase())) return
+    if (kind === 'editor' && config.users.some((u) => u.role === 'video_editor' && u.name === name)) return
+    if (kind === 'strategist' && config.users.some((u) => u.name === name)) return
+    saveOverrides({ ...overrides, [key]: [...current, name] })
+  }
+
+  const duplicate = async (brief) => {
+    await upsert(duplicateBrief(brief, { by: user.name, briefs }))
   }
 
   const removeBrief = async (id) => {
@@ -165,6 +200,7 @@ export default function App() {
           briefs={briefs}
           onOpen={(brief) => setModal({ kind: 'detail', briefId: brief.id })}
           onAction={runAction}
+          onBatchEdit={(ids) => setModal({ kind: 'batch', ids: [...ids] })}
         />
       ) : view === 'tracker' ? (
         <div className="main">
@@ -172,7 +208,12 @@ export default function App() {
             <div><h1>Creative Tracker</h1><div className="sub">{briefs.length} briefs</div></div>
           </div>
           <div className="content">
-            <Tracker config={config} briefs={briefs} onOpen={(brief) => setModal({ kind: 'detail', briefId: brief.id })} />
+            <Tracker
+              config={config}
+              briefs={briefs}
+              onOpen={(brief) => setModal({ kind: 'detail', briefId: brief.id })}
+              onBatchEdit={(ids) => setModal({ kind: 'batch', ids: [...ids] })}
+            />
           </div>
         </div>
       ) : view === 'intake' ? (
@@ -204,6 +245,7 @@ export default function App() {
           briefs={briefs}
           onClose={() => setModal(null)}
           onCreate={(brief) => { upsert(brief); setModal(null) }}
+          onRememberName={rememberName}
         />
       )}
       {modal?.kind === 'detail' && (
@@ -211,10 +253,13 @@ export default function App() {
           config={config}
           user={user}
           brief={briefs.find((b) => b.id === modal.briefId)}
+          briefs={briefs}
           onClose={() => setModal(null)}
           onSave={upsert}
           onDelete={(id) => { if (canDeleteBriefs(user.role)) removeBrief(id) }}
           onAction={runAction}
+          onDuplicate={duplicate}
+          onRememberName={rememberName}
         />
       )}
       {modal?.kind === 'action' && (
@@ -224,6 +269,19 @@ export default function App() {
           transition={modal.transition}
           onClose={() => setModal(null)}
           onConfirm={confirmAction}
+        />
+      )}
+      {modal?.kind === 'batch' && (
+        <BatchEditModal
+          config={config}
+          briefs={briefs}
+          selected={new Set(modal.ids)}
+          user={user}
+          onClose={() => setModal(null)}
+          onApply={async (updated) => {
+            await upsertMany(updated)
+            setModal(null)
+          }}
         />
       )}
       {modal?.kind === 'lists' && (

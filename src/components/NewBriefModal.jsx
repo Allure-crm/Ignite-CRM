@@ -1,15 +1,30 @@
 import { useState } from 'react'
-import { briefName, nextBriefNumber, uuid, todayKey } from '../lib/helpers'
+import {
+  UNASSIGNED_EDITOR,
+  angleOptions,
+  buildCsName,
+  editorNames,
+  nextBriefNumber,
+  strategistNames,
+  uuid,
+  todayKey,
+  withCsName,
+} from '../lib/helpers'
 import FormatTypeField from './FormatTypeField'
+import CreatableSelect from './CreatableSelect'
+import CsName from './CsName'
 
-export default function NewBriefModal({ config, user, briefs, onClose, onCreate }) {
-  const strategistRoles = ['strategist', 'creative_strategist']
-  const strategists = config.users.filter((u) => strategistRoles.includes(u.role))
+export default function NewBriefModal({ config, user, briefs, onClose, onCreate, onRememberName }) {
+  const strategists = strategistNames(config, briefs)
+  const editors = editorNames(config, briefs)
+  const defaultStrategist = strategists.includes(user.name) ? user.name : (strategists[0] || '')
   const [form, setForm] = useState({
-    strategist: strategistRoles.includes(user.role) ? user.name : (strategists[0]?.name || ''),
+    strategist: defaultStrategist,
+    editor: UNASSIGNED_EDITOR,
     date: todayKey(),
     persona: '',
-    awarenessStage: '',
+    funnel: '',
+    awareness: '',
     type: '',
     formatType: '',
     facebookPage: '',
@@ -18,35 +33,45 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate 
     angle: '',
     scriptLink: '',
   })
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
+  const set = (k, v) => setForm((f) => {
+    const next = { ...f, [k]: v }
+    if (k === 'type' && v !== f.type) next.formatType = ''
+    return next
+  })
 
-  const complete = form.strategist && form.date && form.persona && form.awarenessStage && form.type && form.facebookPage && form.landingPage
-  const abbr = config.users.find((u) => u.name === form.strategist)?.abbr || form.strategist.slice(0, 2).toUpperCase()
+  const complete = form.strategist && form.date && form.persona && form.funnel && form.awareness && form.type && form.formatType && form.facebookPage && form.landingPage
+  const preview = buildCsName(form)
   const number = nextBriefNumber(briefs)
-  const preview = form.strategist ? briefName({ abbr, briefNumber: number }) : ''
+
+  const remember = (kind, value) => {
+    if (value && onRememberName) onRememberName(kind, value)
+  }
 
   const create = () => {
     const now = Date.now()
-    onCreate({
+    remember('strategist', form.strategist)
+    remember('editor', form.editor)
+    remember('angle', form.angle)
+    onCreate(withCsName({
       id: uuid(),
-      name: preview,
       ...form,
+      awarenessStage: form.awareness,
       finalVideoLink: '',
       ugcAssetsLink: '',
-      assignedTo: null,
+      assignedTo: form.editor !== UNASSIGNED_EDITOR ? form.editor : null,
       status: 'scripting',
       briefNumber: number,
       createdAt: now,
       updatedAt: now,
       launchedAt: null,
       history: [{ status: 'scripting', by: user.name, at: now, note: 'Brief created' }],
-    })
+    }))
   }
 
   const Choices = ({ field, options }) => (
     <div className="choice-row">
       {options.map((o) => (
-        <button key={o} className={`choice ${form[field] === o ? 'selected' : ''}`} onClick={() => set(field, o)}>
+        <button type="button" key={o} className={`choice ${form[field] === o ? 'selected' : ''}`} onClick={() => set(field, o)}>
           {o}
         </button>
       ))}
@@ -61,31 +86,25 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate 
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
-          <div className="name-preview">
-            <div className="label">Brief name (auto-generated)</div>
-            <div className={`value ${preview ? '' : 'placeholder'}`}>{preview || 'Fill in all fields to preview…'}</div>
-          </div>
+          <CsName value={preview} />
 
-          <div className="field">
-            <label>Creative Strategist</label>
-            <select value={form.strategist} onChange={(e) => set('strategist', e.target.value)}>
-              {strategists.map((s) => <option key={s.name} value={s.name}>{s.name} ({s.abbr})</option>)}
-            </select>
-          </div>
+          <CreatableSelect
+            label="Creative Strategist"
+            value={form.strategist}
+            options={strategists}
+            onChange={(v) => { set('strategist', v); remember('strategist', v) }}
+          />
+
+          <CreatableSelect
+            label={config.fieldLabels.editor}
+            value={form.editor}
+            options={editors}
+            onChange={(v) => { set('editor', v || UNASSIGNED_EDITOR); remember('editor', v) }}
+          />
 
           <div className="field">
             <label>Date</label>
             <input type="date" value={form.date} onChange={(e) => set('date', e.target.value)} />
-          </div>
-
-          <div className="field">
-            <label>{config.fieldLabels.persona}</label>
-            <Choices field="persona" options={config.personas} />
-          </div>
-
-          <div className="field">
-            <label>{config.fieldLabels.awarenessStage}</label>
-            <Choices field="awarenessStage" options={config.awarenessStages} />
           </div>
 
           <div className="field">
@@ -95,10 +114,25 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate 
 
           <FormatTypeField
             config={config}
+            format={form.type}
             value={form.formatType}
             onChange={(v) => set('formatType', v)}
-            extraOptions={briefs.map((b) => b.formatType)}
           />
+
+          <div className="field">
+            <label>{config.fieldLabels.funnel}</label>
+            <Choices field="funnel" options={config.funnels} />
+          </div>
+
+          <div className="field">
+            <label>{config.fieldLabels.awarenessStage}</label>
+            <Choices field="awareness" options={config.awarenessStages} />
+          </div>
+
+          <div className="field">
+            <label>{config.fieldLabels.persona}</label>
+            <Choices field="persona" options={config.personas} />
+          </div>
 
           <div className="field">
             <label>{config.fieldLabels.page}</label>
@@ -120,7 +154,16 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate 
 
           <div className="field">
             <label>{config.fieldLabels.angle}</label>
-            <input type="text" placeholder="What's the angle?" value={form.angle} onChange={(e) => set('angle', e.target.value)} />
+            <input
+              type="text"
+              list="new-brief-angles"
+              placeholder="What's the angle?"
+              value={form.angle}
+              onChange={(e) => set('angle', e.target.value)}
+            />
+            <datalist id="new-brief-angles">
+              {angleOptions(config, briefs).map((o) => <option key={o} value={o} />)}
+            </datalist>
           </div>
 
           <div className="field">

@@ -1,10 +1,12 @@
 import BriefCard from './BriefCard'
+import { matchesCsNameQuery } from '../lib/helpers'
 
 export default function Board({ config, user, view, briefs, search, onSearch, onOpen, onAction }) {
   const q = search.trim().toLowerCase()
   const matches = (b) =>
     !q ||
-    [b.name, b.persona, b.strategist, b.facebookPage, b.landingPage, b.assignedTo]
+    matchesCsNameQuery(b, q) ||
+    [b.facebookPage, b.landingPage, b.adConcept]
       .filter(Boolean).some((s) => s.toLowerCase().includes(q))
 
   const filtered = briefs.filter(matches)
@@ -65,7 +67,7 @@ export default function Board({ config, user, view, briefs, search, onSearch, on
         </div>
         <input
           className="search"
-          placeholder="Search briefs…"
+          placeholder="Search CS Name…"
           value={search}
           onChange={(e) => onSearch(e.target.value)}
         />
