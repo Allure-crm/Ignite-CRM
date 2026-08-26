@@ -1,12 +1,11 @@
-import { canCreateBriefs } from '../lib/helpers'
-
-const TRACKER_ROLES = ['operator', 'creative_strategist', 'cfo']
+import { canCreateBriefs, roleQueue, TRACKER_ROLES } from '../lib/helpers'
 
 export default function Sidebar({ config, user, view, briefs, onView, onNewBrief, onManageLists, onSwitchUser, isSupabase, storeError }) {
-  const queue = config.roles[user.role]?.queue || []
+  const queue = roleQueue(config, user.role)
   const countFor = (status) => briefs.filter((b) => b.status === status).length
   const launchedCount = briefs.filter((b) => b.status === 'launched').length
   const showTracker = TRACKER_ROLES.includes(user.role)
+  const showQueue = queue.length > 0
 
   return (
     <aside className="sidebar">
@@ -26,20 +25,22 @@ export default function Sidebar({ config, user, view, briefs, onView, onNewBrief
         <button className="btn-primary" onClick={onNewBrief}>+ New Brief</button>
       )}
 
-      <div className="nav-section">
-        <div className="nav-label">My Queue</div>
-        {queue.map((status) => (
-          <button
-            key={status}
-            className={`nav-item ${view === status ? 'active' : ''}`}
-            onClick={() => onView(status)}
-          >
-            <span className="dot" style={{ background: config.statuses[status]?.color }} />
-            {config.statuses[status]?.label || status}
-            <span className="count">{countFor(status)}</span>
-          </button>
-        ))}
-      </div>
+      {showQueue && (
+        <div className="nav-section">
+          <div className="nav-label">My Queue</div>
+          {queue.map((status) => (
+            <button
+              key={status}
+              className={`nav-item ${view === status ? 'active' : ''}`}
+              onClick={() => onView(status)}
+            >
+              <span className="dot" style={{ background: config.statuses[status]?.color }} />
+              {config.statuses[status]?.label || status}
+              <span className="count">{countFor(status)}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="nav-section">
         <div className="nav-label">Overview</div>

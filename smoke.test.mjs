@@ -5,7 +5,7 @@ console.assert = (cond, msg) => {
   origAssert(cond, msg)
   if (!cond) throw new Error(msg || 'assertion failed')
 }
-import { briefName, nextBriefNumber, applyTransition, mergedConfig, formatTypeOptions, formatTypeOptionsFor, importMissingBriefs, allowedTransitions, canCreateBriefs, canDeleteBriefs, buildCsName, applyNamingPatch, duplicateBrief, withCsName, matchesCsNameQuery, UNASSIGNED_EDITOR } from './src/lib/helpers.js'
+import { briefName, nextBriefNumber, applyTransition, mergedConfig, formatTypeOptions, formatTypeOptionsFor, importMissingBriefs, allowedTransitions, canCreateBriefs, canDeleteBriefs, buildCsName, applyNamingPatch, duplicateBrief, withCsName, matchesCsNameQuery, UNASSIGNED_EDITOR, defaultViewFor, isViewAllowed, roleQueue } from './src/lib/helpers.js'
 import { resolveSupabaseCreds, postgresUrl } from './src/lib/supabaseEnv.js'
 import { briefsToCsv } from './src/lib/exportSheet.js'
 import config from './src/brand.config.js'
@@ -89,6 +89,12 @@ console.assert(mergedKeep.awarenessStages.includes('Problem Aware'), 'awareness 
 
 console.assert(!canCreateBriefs('video_editor') && canCreateBriefs('creative_strategist'), 'create briefs permission FAILED')
 console.assert(!canDeleteBriefs('video_editor') && canDeleteBriefs('operator'), 'delete briefs permission FAILED')
+console.assert(roleQueue(config, 'operator').length === 0, 'operator queue should be empty')
+console.assert(defaultViewFor(config, 'operator') === 'summary', 'operator default view FAILED')
+console.assert(isViewAllowed(config, 'operator', 'summary') && isViewAllowed(config, 'operator', 'all') && isViewAllowed(config, 'operator', 'launched') && isViewAllowed(config, 'operator', 'tracker') && isViewAllowed(config, 'operator', 'intake'), 'operator overview views FAILED')
+console.assert(!isViewAllowed(config, 'operator', 'scripting') && !isViewAllowed(config, 'operator', 'needs_editing'), 'operator must not land on queue lanes')
+console.assert(defaultViewFor(config, 'creative_strategist') === 'scripting', 'strategist default view FAILED')
+console.assert(isViewAllowed(config, 'creative_strategist', 'scripting') && isViewAllowed(config, 'video_editor', 'needs_editing'), 'queue views FAILED')
 const editorOnReview = allowedTransitions(config, 'needs_review', 'video_editor')
 console.assert(editorOnReview.length === 0, 'editor must not approve needs_review')
 const editorOnScriptReview = allowedTransitions(config, 'script_review', 'video_editor')
