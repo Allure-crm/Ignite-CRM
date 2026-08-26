@@ -75,6 +75,7 @@ console.assert(csv.includes('Format Type'), 'csv header format type FAILED')
 console.assert(csv.includes('Native story') && csv.includes('Female holding bottle'), 'csv lost formatType FAILED')
 console.assert(csv.includes('existing concept') && csv.includes('do not wipe'), 'csv lost sheet data FAILED')
 console.assert(csv.includes('Keep Me') && csv.includes('Also Keep'), 'csv lost brief names FAILED')
+console.assert(csv.includes('Ad Name'), 'csv header ad name FAILED')
 
 const skipped = importMissingBriefs(existingSheet)
 console.assert(skipped.every((row) => row.briefNumber !== 1 && row.briefNumber !== 2), 'import must not replace existing sheet rows')
@@ -149,5 +150,13 @@ console.assert(legacy.funnel === 'TOF' && legacy.awareness === '' && legacy.name
 console.assert(matchesCsNameQuery(legacy, 'TOF') && matchesCsNameQuery(legacy, 'video') && !matchesCsNameQuery(legacy, 'BOF'), 'cs search FAILED')
 
 console.assert(csv.includes('CS Name'), 'csv header cs name FAILED')
+
+const namedSheet = briefsToCsv(
+  [{ briefNumber: 3, strategist: 'Mia', name: 'Mia_Zain_Video_TOF_the cologne she cannot get enough of', editor: 'Zain' }],
+  config
+)
+console.assert(namedSheet.includes('Mia') && namedSheet.includes('Mia_Zain_Video_TOF_the cologne she cannot get enough of'), 'csv cs/ad name columns FAILED')
+const namedHeaders = namedSheet.split('\n')[0]
+console.assert(namedHeaders.indexOf('CS Name') < namedHeaders.indexOf('Ad Name'), 'csv column order FAILED')
 
 console.log('ALL SMOKE TESTS PASSED — path:', ['scripting', ...path].join(' > '))

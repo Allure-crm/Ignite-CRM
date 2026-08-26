@@ -50,6 +50,7 @@ export default {
     type: 'Format',
     editor: 'Editor',
     csName: 'CS Name',
+    adName: 'Ad Name',
     page: 'Facebook Page',
     landingPage: 'Landing Page',
     adConcept: 'Ad Concept',

@@ -9,12 +9,13 @@ const RESULT_COLORS = {
   'KPI Winner': '#8b5cf6',
 }
 
-export const BATCH_SHEET_COLUMNS = 20
+export const BATCH_SHEET_COLUMNS = 21
 
 const SORTABLE = [
   { key: 'briefNumber', label: '#' },
   { key: 'date', label: 'Date' },
-  { key: 'name', label: 'CS Name' },
+  { key: 'strategist', label: 'CS Name' },
+  { key: 'name', label: 'Ad Name' },
   { key: 'editor', label: 'Editor' },
   { key: 'type', label: 'Format' },
   { key: 'formatType', label: 'Format Type' },
@@ -77,8 +78,9 @@ export default function BatchSheet({
       )}
       <td className="tracker-td tracker-num">{b.briefNumber || i + 1}</td>
       <td className="tracker-td">{b.date || '—'}</td>
-      <td className="tracker-td tracker-name" onClick={(e) => e.stopPropagation()}>
-        <CsName value={b.name} compact />
+      <td className="tracker-td tracker-cs">{b.strategist || '—'}</td>
+      <td className="tracker-td tracker-ad-name" onClick={(e) => e.stopPropagation()}>
+        <CsName value={b.name} compact copyTitle="Copy Ad Name" />
       </td>
       <td className="tracker-td">{b.editor || b.assignedTo || 'Unassigned'}</td>
       <td className="tracker-td">{b.type || '—'}</td>
@@ -129,7 +131,8 @@ export default function BatchSheet({
             )}
             <Th col={{ key: 'briefNumber', label: '#' }} />
             <Th col={{ key: 'date', label: 'Date' }} />
-            <Th col={{ key: 'name', label: config.fieldLabels.csName || 'CS Name' }} />
+            <Th col={{ key: 'strategist', label: config.fieldLabels.csName || 'CS Name' }} />
+            <Th col={{ key: 'name', label: config.fieldLabels.adName || 'Ad Name' }} />
             <Th col={{ key: 'editor', label: 'Editor' }} />
             <Th col={{ key: 'type', label: 'Format' }} />
             <Th col={{ key: 'formatType', label: 'Format Type' }} />
