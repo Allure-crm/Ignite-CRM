@@ -182,7 +182,14 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
           </div>
         </div>
         <div className="modal-foot">
-          <button className="btn-primary" disabled={!complete} style={{ opacity: complete ? 1 : 0.45 }} onClick={create}>
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={!complete}
+            title={complete ? 'Create brief' : 'Fill Format, Format Type, Funnel, Awareness, Page, Landing Page, and Ad Type'}
+            style={{ opacity: complete ? 1 : 0.45 }}
+            onClick={create}
+          >
             Create Brief
           </button>
         </div>
