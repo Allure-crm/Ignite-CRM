@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import {
+  AD_TYPES,
+  NAMING_SCHEME_MONTHLY,
   UNASSIGNED_EDITOR,
-  angleOptions,
-  buildCsName,
+  buildMonthlyBatchName,
   editorNames,
-  nextBriefNumber,
+  nextMonthlyBatchNumber,
   strategistNames,
   uuid,
   todayKey,
@@ -31,7 +32,9 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
     landingPage: '',
     adConcept: '',
     angle: '',
+    adType: '',
     scriptLink: '',
+    launchedDate: '',
   })
   const set = (k, v) => setForm((f) => {
     const next = { ...f, [k]: v }
@@ -39,9 +42,9 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
     return next
   })
 
-  const complete = form.strategist && form.date && form.persona && form.funnel && form.awareness && form.type && form.formatType && form.facebookPage && form.landingPage
-  const number = nextBriefNumber(briefs)
-  const preview = buildCsName({ ...form, briefNumber: number })
+  const complete = form.strategist && form.date && form.funnel && form.awareness && form.type && form.formatType && form.facebookPage && form.landingPage && form.adType
+  const number = nextMonthlyBatchNumber(briefs, form.strategist, form.date)
+  const preview = buildMonthlyBatchName({ ...form, briefNumber: number })
 
   const remember = (kind, value) => {
     if (value && onRememberName) onRememberName(kind, value)
@@ -51,10 +54,10 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
     const now = Date.now()
     remember('strategist', form.strategist)
     remember('editor', form.editor)
-    remember('angle', form.angle)
     onCreate(withCsName({
       id: uuid(),
       ...form,
+      namingScheme: NAMING_SCHEME_MONTHLY,
       awarenessStage: form.awareness,
       finalVideoLink: '',
       ugcAssetsLink: '',
@@ -64,6 +67,7 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
       createdAt: now,
       updatedAt: now,
       launchedAt: null,
+      launchedDate: form.launchedDate || '',
       history: [{ status: 'scripting', by: user.name, at: now, note: 'Brief created' }],
     }))
   }
@@ -86,7 +90,7 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
-          <CsName value={preview} />
+          <CsName value={preview} placeholder="CS_Editor_Mon_Batch_#" />
 
           <CreatableSelect
             label="Creative Strategist"
@@ -130,7 +134,7 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
           </div>
 
           <div className="field">
-            <label>{config.fieldLabels.persona}</label>
+            <label>{config.fieldLabels.persona} <span className="optional">optional</span></label>
             <Choices field="persona" options={config.personas} />
           </div>
 
@@ -148,22 +152,28 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
           </div>
 
           <div className="field">
+            <label>{config.fieldLabels.adType} <span className="req">*</span></label>
+            <Choices field="adType" options={config.adTypes || AD_TYPES} />
+          </div>
+
+          <div className="field">
             <label>{config.fieldLabels.adConcept}</label>
-            <input type="text" placeholder="Describe the ad concept…" value={form.adConcept} onChange={(e) => set('adConcept', e.target.value)} />
+            <input type="text" placeholder="Short concept label…" value={form.adConcept} onChange={(e) => set('adConcept', e.target.value)} />
           </div>
 
           <div className="field">
             <label>{config.fieldLabels.angle}</label>
-            <input
-              type="text"
-              list="new-brief-angles"
-              placeholder="What's the angle?"
+            <textarea
+              placeholder="Full creative write-up / angle…"
               value={form.angle}
               onChange={(e) => set('angle', e.target.value)}
+              rows={6}
             />
-            <datalist id="new-brief-angles">
-              {angleOptions(config, briefs).map((o) => <option key={o} value={o} />)}
-            </datalist>
+          </div>
+
+          <div className="field">
+            <label>{config.fieldLabels.launchedDate}</label>
+            <input type="date" value={form.launchedDate} onChange={(e) => set('launchedDate', e.target.value)} />
           </div>
 
           <div className="field">

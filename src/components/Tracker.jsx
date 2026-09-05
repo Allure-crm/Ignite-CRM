@@ -14,6 +14,7 @@ const RESULT_COLORS = {
 const EMPTY_FILTERS = {
   dateFrom: '', dateTo: '', persona: '', page: '', landing: '', status: '',
   csName: '', strategist: '', editor: '', type: '', formatType: '', funnel: '', awareness: '',
+  adType: '',
 }
 
 function sortBriefs(list, sortKey, sortDir) {
@@ -58,6 +59,7 @@ export default function Tracker({ config, briefs, onOpen, onBatchEdit }) {
       if (filters.formatType && b.formatType !== filters.formatType) return false
       if (filters.funnel && b.funnel !== filters.funnel) return false
       if (filters.awareness && b.awareness !== filters.awareness) return false
+      if (filters.adType && b.adType !== filters.adType) return false
       if (filters.csName && !matchesCsNameQuery(b, filters.csName)) return false
       return true
     })
@@ -132,10 +134,10 @@ export default function Tracker({ config, briefs, onOpen, onBatchEdit }) {
           </select>
         </div>
         <div className="filter-group">
-          <label>Ad Name</label>
+          <label>CS Name</label>
           <input
             type="search"
-            placeholder="CS, TOF, Video…"
+            placeholder="Mia, Sep, Batch…"
             value={filters.csName}
             onChange={(e) => setF('csName', e.target.value)}
           />
@@ -192,6 +194,13 @@ export default function Tracker({ config, briefs, onOpen, onBatchEdit }) {
             {unique('awareness').concat(config.awarenessStages.filter((v) => !unique('awareness').includes(v))).map((v) => (
               <option key={v} value={v}>{v}</option>
             ))}
+          </select>
+        </div>
+        <div className="filter-group">
+          <label>Ad Type</label>
+          <select value={filters.adType} onChange={(e) => setF('adType', e.target.value)}>
+            <option value="">All</option>
+            {(config.adTypes || []).map((v) => <option key={v} value={v}>{v}</option>)}
           </select>
         </div>
         <div className="filter-group">
