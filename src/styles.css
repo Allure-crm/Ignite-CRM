@@ -52,6 +52,12 @@ body {
   color: #0A0A0A; font-weight: 700; font-size: 13.5px; cursor: pointer;
 }
 .btn-primary:hover { filter: brightness(1.1); }
+.btn-primary:disabled,
+.btn-primary:disabled:hover {
+  filter: grayscale(0.7);
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .nav-section { margin-top: 20px; }
 .nav-label { font-size: 10.5px; letter-spacing: 1.2px; color: var(--faint); padding: 0 8px 8px; text-transform: uppercase; }
