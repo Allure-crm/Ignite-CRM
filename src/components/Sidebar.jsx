@@ -47,6 +47,9 @@ export default function Sidebar({ config, user, view, briefs, onView, onNewBrief
         <button className={`nav-item ${view === 'summary' ? 'active' : ''}`} onClick={() => onView('summary')}>
           ▤ Summary
         </button>
+        <button className={`nav-item ${view === 'output' ? 'active' : ''}`} onClick={() => onView('output')}>
+          ◈ Creative Output
+        </button>
         <button className={`nav-item ${view === 'all' ? 'active' : ''}`} onClick={() => onView('all')}>
           ▦ All Briefs <span className="count">{briefs.length}</span>
         </button>

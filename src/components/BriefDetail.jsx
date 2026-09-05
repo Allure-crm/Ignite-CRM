@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import {
+  AD_TYPES,
   UNASSIGNED_EDITOR,
   allowedTransitions,
-  angleOptions,
   applyNamingPatch,
-  buildCsName,
   canCreateBriefs,
   canDeleteBriefs,
+  displayCsName,
   editorNames,
   fmtDate,
+  isMonthlyNaming,
+  nextMonthlyBatchNumber,
+  sameStrategist,
   strategistNames,
 } from '../lib/helpers'
 import FormatTypeField from './FormatTypeField'
@@ -27,6 +30,8 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
     landingPage: brief?.landingPage || '',
     adConcept: brief?.adConcept || '',
     angle: brief?.angle || '',
+    adType: brief?.adType || '',
+    launchedDate: brief?.launchedDate || '',
     strategist: brief?.strategist || '',
     editor: brief?.editor || brief?.assignedTo || UNASSIGNED_EDITOR,
     scriptLink: brief?.scriptLink || '',
@@ -45,13 +50,20 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
     return next
   })
   const latestNote = [...(brief.history || [])].reverse().find((h) => h.note)
-  const preview = buildCsName({ ...brief, ...edit, nameIsCopy: false })
+  const previewNumber = isMonthlyNaming(brief) && (
+    !sameStrategist(brief.strategist, edit.strategist) || String(brief.date || '') !== String(edit.date || '')
+  )
+    ? nextMonthlyBatchNumber(briefs, edit.strategist, edit.date, { exceptId: brief.id })
+    : brief.briefNumber
+  const preview = displayCsName(
+    { ...brief, ...edit, briefNumber: previewNumber, nameIsCopy: false },
+    { preferStored: false }
+  )
 
   const save = () => {
     if (edit.strategist) onRememberName?.('strategist', edit.strategist)
     if (edit.editor) onRememberName?.('editor', edit.editor)
-    if (edit.angle) onRememberName?.('angle', edit.angle)
-    onSave(applyNamingPatch(brief, { ...edit, awarenessStage: edit.awareness }, { by: user.name, config }))
+    onSave(applyNamingPatch(brief, { ...edit, awarenessStage: edit.awareness }, { by: user.name, config, briefs }))
     onClose()
   }
 
@@ -82,7 +94,7 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
               </div>
             </div>
             <div className="detail-item"><div className="k">Assigned To</div><div className="v">{brief.assignedTo || '—'}</div></div>
-            <div className="detail-item"><div className="k">Launched</div><div className="v">{brief.launchedAt ? fmtDate(brief.launchedAt) : '—'}</div></div>
+            <div className="detail-item"><div className="k">{config.fieldLabels.launchedDate}</div><div className="v">{edit.launchedDate ? fmtDate(edit.launchedDate) : (brief.launchedAt ? fmtDate(brief.launchedAt) : '—')}</div></div>
           </div>
 
           {brief.status === 'script_revision' && latestNote?.note && (
@@ -114,6 +126,16 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
           <div className="field">
             <label>Date</label>
             <input type="date" value={edit.date} onChange={(e) => set('date', e.target.value)} />
+          </div>
+
+          <div className="field">
+            <label>{config.fieldLabels.launchedDate}</label>
+            <input type="date" value={edit.launchedDate} onChange={(e) => set('launchedDate', e.target.value)} />
+          </div>
+
+          <div className="field">
+            <label>{config.fieldLabels.adType}</label>
+            <Choices field="adType" options={config.adTypes || AD_TYPES} />
           </div>
 
           <div className="field">
@@ -157,21 +179,17 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
 
           <div className="field">
             <label>{config.fieldLabels.adConcept}</label>
-            <input type="text" placeholder="Describe the ad concept…" value={edit.adConcept} onChange={(e) => set('adConcept', e.target.value)} />
+            <input type="text" placeholder="Short concept label…" value={edit.adConcept} onChange={(e) => set('adConcept', e.target.value)} />
           </div>
 
           <div className="field">
             <label>{config.fieldLabels.angle}</label>
-            <input
-              type="text"
-              list="detail-angles"
-              placeholder="What's the angle?"
+            <textarea
+              placeholder="Full creative write-up / angle…"
               value={edit.angle}
               onChange={(e) => set('angle', e.target.value)}
+              rows={6}
             />
-            <datalist id="detail-angles">
-              {angleOptions(config, briefs).map((o) => <option key={o} value={o} />)}
-            </datalist>
           </div>
 
           <div className="field">
