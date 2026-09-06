@@ -191,7 +191,7 @@ export default function App() {
         view={view}
         briefs={briefs}
         onView={setView}
-        onNewBrief={() => { if (canCreateBriefs(user.role)) setModal({ kind: 'new' }) }}
+        onNewBrief={() => { if (canCreateBriefs(user.role, config)) setModal({ kind: 'new' }) }}
         onManageLists={() => setModal({ kind: 'lists' })}
         onSwitchUser={() => { saveUser(null); setUser(null) }}
         isSupabase={isSupabase}
@@ -248,7 +248,7 @@ export default function App() {
         />
       )}
 
-      {modal?.kind === 'new' && canCreateBriefs(user.role) && (
+      {modal?.kind === 'new' && canCreateBriefs(user.role, config) && (
         <NewBriefModal
           config={config}
           user={user}
@@ -266,7 +266,7 @@ export default function App() {
           briefs={briefs}
           onClose={() => setModal(null)}
           onSave={upsert}
-          onDelete={(id) => { if (canDeleteBriefs(user.role)) removeBrief(id) }}
+          onDelete={(id) => { if (canDeleteBriefs(user.role, config)) removeBrief(id) }}
           onAction={runAction}
           onDuplicate={duplicate}
           onRememberName={rememberName}

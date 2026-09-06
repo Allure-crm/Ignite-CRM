@@ -137,7 +137,7 @@ export default function Tracker({ config, briefs, onOpen, onBatchEdit }) {
           <label>CS Name</label>
           <input
             type="search"
-            placeholder="Mia, Sep, Batch…"
+            placeholder="Mia, Sep, Hook…"
             value={filters.csName}
             onChange={(e) => setF('csName', e.target.value)}
           />

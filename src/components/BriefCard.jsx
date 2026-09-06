@@ -1,4 +1,4 @@
-import { fmtDate, ageDays, allowedTransitions } from '../lib/helpers'
+import { fmtDate, ageDays, allowedTransitions, displayName } from '../lib/helpers'
 import CsName from './CsName'
 
 export default function BriefCard({ brief, config, user, onOpen, onAction }) {
@@ -12,7 +12,7 @@ export default function BriefCard({ brief, config, user, onOpen, onAction }) {
       <span className={`age ${ageClass}`}>{days}d</span>
       <div className="card-top">
         <div className="card-name">
-          <CsName value={brief.name} compact />
+          <CsName value={displayName(brief)} compact />
         </div>
         <span className="badge type">{brief.type}</span>
       </div>
@@ -22,9 +22,11 @@ export default function BriefCard({ brief, config, user, onOpen, onAction }) {
         <div className="card-note">“{latestNote}”</div>
       )}
       <div className="pills">
-        <span className="pill stage">{brief.awarenessStage}</span>
+        {brief.funnel && <span className="pill stage">{brief.funnel}</span>}
+        <span className="pill stage">{brief.awareness || brief.awarenessStage}</span>
         {brief.formatType && <span className="pill">{brief.formatType}</span>}
         {brief.adType && <span className="pill">{brief.adType}</span>}
+        {brief.persona && <span className="pill faint">{brief.persona}</span>}
         <span className="pill" style={{ color: config.statuses[brief.status]?.color }}>
           {config.statuses[brief.status]?.label}
         </span>

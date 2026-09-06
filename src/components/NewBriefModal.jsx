@@ -1,26 +1,18 @@
 import { useState } from 'react'
 import {
   AD_TYPES,
-  NAMING_SCHEME_MONTHLY,
   UNASSIGNED_EDITOR,
-  buildMonthlyBatchName,
-  editorNames,
-  nextMonthlyBatchNumber,
-  strategistNames,
-  uuid,
+  buildCsName,
+  nextStrategistNumber,
   todayKey,
+  uuid,
   withCsName,
 } from '../lib/helpers'
-import FormatTypeField from './FormatTypeField'
-import CreatableSelect from './CreatableSelect'
-import CsName from './CsName'
+import NamingFields from './NamingFields'
 
 export default function NewBriefModal({ config, user, briefs, onClose, onCreate, onRememberName }) {
-  const strategists = strategistNames(config, briefs)
-  const editors = editorNames(config, briefs)
-  const defaultStrategist = strategists.includes(user.name) ? user.name : (strategists[0] || '')
   const [form, setForm] = useState({
-    strategist: defaultStrategist,
+    strategist: user.role === 'creative_strategist' || user.role === 'strategist' ? user.name : '',
     editor: UNASSIGNED_EDITOR,
     date: todayKey(),
     persona: '',
@@ -33,32 +25,23 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
     adConcept: '',
     angle: '',
     adType: '',
+    hookNumber: 1,
     scriptLink: '',
-    launchedDate: '',
-  })
-  const set = (k, v) => setForm((f) => {
-    const next = { ...f, [k]: v }
-    if (k === 'type' && v !== f.type) next.formatType = ''
-    return next
   })
 
-  const complete = form.strategist && form.date && form.funnel && form.awareness && form.type && form.formatType && form.facebookPage && form.landingPage && form.adType
-  const number = nextMonthlyBatchNumber(briefs, form.strategist, form.date)
-  const preview = buildMonthlyBatchName({ ...form, briefNumber: number })
-
-  const remember = (kind, value) => {
-    if (value && onRememberName) onRememberName(kind, value)
-  }
+  const number = nextStrategistNumber(briefs, form.strategist)
+  const preview = { ...form, briefNumber: number, awarenessStage: form.awareness }
+  const complete = form.strategist && form.date && form.funnel && form.awareness && form.type && form.formatType && form.adType && form.angle
 
   const create = () => {
     const now = Date.now()
-    remember('strategist', form.strategist)
-    remember('editor', form.editor)
+    if (form.strategist) onRememberName?.('strategist', form.strategist)
+    if (form.editor) onRememberName?.('editor', form.editor)
     onCreate(withCsName({
       id: uuid(),
       ...form,
-      namingScheme: NAMING_SCHEME_MONTHLY,
       awarenessStage: form.awareness,
+      name: buildCsName(preview),
       finalVideoLink: '',
       ugcAssetsLink: '',
       assignedTo: form.editor !== UNASSIGNED_EDITOR ? form.editor : null,
@@ -67,7 +50,7 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
       createdAt: now,
       updatedAt: now,
       launchedAt: null,
-      launchedDate: form.launchedDate || '',
+      launchedDate: '',
       history: [{ status: 'scripting', by: user.name, at: now, note: 'Brief created' }],
     }))
   }
@@ -75,7 +58,7 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
   const Choices = ({ field, options }) => (
     <div className="choice-row">
       {options.map((o) => (
-        <button type="button" key={o} className={`choice ${form[field] === o ? 'selected' : ''}`} onClick={() => set(field, o)}>
+        <button type="button" key={o} className={`choice ${form[field] === o ? 'selected' : ''}`} onClick={() => setForm((f) => ({ ...f, [field]: o }))}>
           {o}
         </button>
       ))}
@@ -90,57 +73,32 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
-          <CsName value={preview} placeholder="CS_Editor_Mon_Batch_#" />
-
-          <CreatableSelect
-            label="Creative Strategist"
-            value={form.strategist}
-            options={strategists}
-            onChange={(v) => { set('strategist', v); remember('strategist', v) }}
-          />
-
-          <CreatableSelect
-            label={config.fieldLabels.editor}
-            value={form.editor}
-            options={editors}
-            onChange={(v) => { set('editor', v || UNASSIGNED_EDITOR); remember('editor', v) }}
+          <NamingFields
+            config={config}
+            briefs={briefs}
+            value={preview}
+            onChange={(next) => setForm((f) => ({
+              ...f,
+              ...next,
+              awareness: next.awareness || next.awarenessStage || f.awareness,
+              awarenessStage: next.awareness || next.awarenessStage || f.awareness,
+            }))}
+            onAddPerson={(role, name) => onRememberName?.(role === 'video_editor' ? 'editor' : 'strategist', name)}
           />
 
           <div className="field">
             <label>Date</label>
-            <input type="date" value={form.date} onChange={(e) => set('date', e.target.value)} />
+            <input type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
           </div>
 
           <div className="field">
-            <label>{config.fieldLabels.type}</label>
-            <Choices field="type" options={config.types} />
-          </div>
-
-          <FormatTypeField
-            config={config}
-            format={form.type}
-            value={form.formatType}
-            onChange={(v) => set('formatType', v)}
-          />
-
-          <div className="field">
-            <label>{config.fieldLabels.funnel}</label>
-            <Choices field="funnel" options={config.funnels} />
-          </div>
-
-          <div className="field">
-            <label>{config.fieldLabels.awarenessStage}</label>
-            <Choices field="awareness" options={config.awarenessStages} />
-          </div>
-
-          <div className="field">
-            <label>{config.fieldLabels.persona} <span className="optional">optional</span></label>
-            <Choices field="persona" options={config.personas} />
+            <label>{config.fieldLabels.adType}</label>
+            <Choices field="adType" options={config.adTypes || AD_TYPES} />
           </div>
 
           <div className="field">
             <label>{config.fieldLabels.page}</label>
-            <select value={form.facebookPage} onChange={(e) => set('facebookPage', e.target.value)}>
+            <select value={form.facebookPage} onChange={(e) => setForm((f) => ({ ...f, facebookPage: e.target.value }))}>
               <option value="">Select…</option>
               {config.pages.map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
@@ -152,46 +110,27 @@ export default function NewBriefModal({ config, user, briefs, onClose, onCreate,
           </div>
 
           <div className="field">
-            <label>{config.fieldLabels.adType} <span className="req">*</span></label>
-            <Choices field="adType" options={config.adTypes || AD_TYPES} />
-          </div>
-
-          <div className="field">
             <label>{config.fieldLabels.adConcept}</label>
-            <input type="text" placeholder="Short concept label…" value={form.adConcept} onChange={(e) => set('adConcept', e.target.value)} />
+            <input type="text" placeholder="Short label for the batch…" value={form.adConcept} onChange={(e) => setForm((f) => ({ ...f, adConcept: e.target.value }))} />
           </div>
 
           <div className="field">
             <label>{config.fieldLabels.angle}</label>
             <textarea
-              placeholder="Full creative write-up / angle…"
-              value={form.angle}
-              onChange={(e) => set('angle', e.target.value)}
               rows={6}
+              placeholder="Full creative write-up…"
+              value={form.angle}
+              onChange={(e) => setForm((f) => ({ ...f, angle: e.target.value }))}
             />
           </div>
 
           <div className="field">
-            <label>{config.fieldLabels.launchedDate}</label>
-            <input type="date" value={form.launchedDate} onChange={(e) => set('launchedDate', e.target.value)} />
-          </div>
-
-          <div className="field">
             <label>{config.fieldLabels.scriptLink}</label>
-            <input type="url" placeholder="Paste doc link…" value={form.scriptLink} onChange={(e) => set('scriptLink', e.target.value)} />
+            <input type="url" placeholder="Paste doc link…" value={form.scriptLink} onChange={(e) => setForm((f) => ({ ...f, scriptLink: e.target.value }))} />
           </div>
         </div>
         <div className="modal-foot">
-          {!complete && (
-            <div className="field-hint">Select Format, Format Type, Funnel, Awareness, Facebook Page, Landing Page, and Ad Type to create.</div>
-          )}
-          <button
-            type="button"
-            className="btn-primary"
-            disabled={!complete}
-            title={complete ? 'Create brief' : 'Fill the required fields first'}
-            onClick={create}
-          >
+          <button className="btn-primary" disabled={!complete} style={{ opacity: complete ? 1 : 0.45 }} onClick={create}>
             Create Brief
           </button>
         </div>

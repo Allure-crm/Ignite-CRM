@@ -35,16 +35,16 @@ export default {
     operator:            { label: 'Operator',            queue: [] }, // Overview only — operator is not working briefs in a personal queue
     cfo:                 { label: 'Chief Fun Officer',   queue: ['script_review', 'scripting', 'script_revision', 'assign_editor', 'needs_editing', 'needs_review', 'needs_revision', 'ugc_content_needed', 'ugc_content_review', 'ugc_content_approved', 'ugc_content_revision', 'ready_to_launch'] },
     creative_strategist: { label: 'Creative Strategist', queue: ['scripting', 'assign_editor', 'needs_review', 'ugc_content_review', 'ugc_content_revision'] },
-    video_editor:        { label: 'Video Editor',        queue: ['needs_editing', 'needs_revision'] },
+    video_editor:        { label: 'Video Editor',        queue: ['needs_editing', 'needs_revision'], canCreateBriefs: false, canDeleteBriefs: false },
     media_buyer:         { label: 'Media Buyer',         queue: ['ready_to_launch'] },
   },
 
-  // New briefs: Strategist_Editor_Mon_Batch_N
-  // N restarts at 1 each month, per creative strategist.
-  // Existing briefs keep their original names.
+  // Ad Name: Strategist_Editor_Mon_N (editor omitted if Unassigned).
+  // N is lifetime per strategist. Editor files: AdName_Hook_#.
 
   // ---- Brief fields (option lists; editable in Manage Lists) --------
   fieldLabels: {
+    strategist: 'Strategist',
     persona: 'Persona',
     awarenessStage: 'Awareness',
     funnel: 'Funnel',

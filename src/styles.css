@@ -194,6 +194,7 @@ body {
 .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .pill { font-size: 10.5px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--panel2); color: var(--muted); }
 .pill.stage { background: #1A1A10; color: #C9A54E; }
+.pill.faint { opacity: .85; }
 .card-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 11.5px; margin-top: 10px; }
 .chips { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .chip {
@@ -238,6 +239,8 @@ body {
   padding: 18px 22px; border-bottom: 1px solid var(--border);
 }
 .modal-head h2 { font-size: 16.5px; }
+.modal-title-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.modal-title-name h2 { overflow-wrap: anywhere; }
 .modal-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
 .modal-body { padding: 20px 22px; overflow-y: auto; }
 .modal-foot { padding: 16px 22px; border-top: 1px solid var(--border); }
@@ -248,6 +251,14 @@ body {
 }
 .name-preview .label { font-size: 10px; letter-spacing: 1px; color: var(--accent); font-weight: 700; text-transform: uppercase; }
 .name-preview .value { font-family: ui-monospace, monospace; font-size: 13px; margin-top: 4px; color: var(--text); }
+.copy-value { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.copy-name {
+  flex-shrink: 0; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg2); color: var(--muted); padding: 3px 7px;
+  font-size: 10.5px; cursor: pointer; font-family: inherit;
+}
+.copy-name:hover { color: var(--accent); border-color: var(--accent); }
+.copy-name:disabled { opacity: .4; cursor: default; }
 .cs-name-row { display: flex; align-items: flex-start; gap: 10px; margin-top: 4px; }
 .cs-name-row .value { flex: 1; margin-top: 0; }
 .cs-name-inline { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; }
@@ -384,7 +395,7 @@ body {
 .tracker-row:hover { background: var(--panel2); }
 .tracker-row:hover .tracker-td { color: #fff; }
 .tracker-num { color: var(--faint); font-size: 11px; font-weight: 600; }
-.tracker-name { font-weight: 600; color: var(--accent); }
+.tracker-name { font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 8px; }
 .tracker-cs { font-weight: 600; color: var(--accent); white-space: nowrap; }
 .tracker-ad-name { white-space: normal; min-width: 420px; }
 .tracker-ad-name .cs-name-inline { align-items: flex-start; }

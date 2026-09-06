@@ -67,7 +67,7 @@ export default function Board({ config, user, view, briefs, search, onSearch, on
         </div>
         <input
           className="search"
-          placeholder="Search CS Name…"
+          placeholder="Search CS Name or Ad Name…"
           value={search}
           onChange={(e) => onSearch(e.target.value)}
         />

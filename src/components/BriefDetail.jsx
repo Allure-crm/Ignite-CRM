@@ -4,26 +4,21 @@ import {
   UNASSIGNED_EDITOR,
   allowedTransitions,
   applyNamingPatch,
+  buildEditorFilename,
   canCreateBriefs,
   canDeleteBriefs,
-  displayCsName,
-  editorNames,
+  displayName,
   fmtDate,
-  isMonthlyNaming,
-  nextMonthlyBatchNumber,
-  sameStrategist,
-  strategistNames,
 } from '../lib/helpers'
-import FormatTypeField from './FormatTypeField'
-import CreatableSelect from './CreatableSelect'
-import CsName from './CsName'
+import NamingFields from './NamingFields'
+import CopyName from './CopyName'
 
 export default function BriefDetail({ config, user, brief, briefs = [], onClose, onSave, onDelete, onAction, onDuplicate, onRememberName }) {
   const [edit, setEdit] = useState({
     date: brief?.date || '',
     persona: brief?.persona || '',
     funnel: brief?.funnel || '',
-    awareness: brief?.awareness || '',
+    awareness: brief?.awareness || brief?.awarenessStage || '',
     type: brief?.type || '',
     formatType: brief?.formatType || '',
     facebookPage: brief?.facebookPage || '',
@@ -34,6 +29,7 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
     launchedDate: brief?.launchedDate || '',
     strategist: brief?.strategist || '',
     editor: brief?.editor || brief?.assignedTo || UNASSIGNED_EDITOR,
+    hookNumber: brief?.hookNumber || 1,
     scriptLink: brief?.scriptLink || '',
     finalVideoLink: brief?.finalVideoLink || '',
     ugcAssetsLink: brief?.ugcAssetsLink || '',
@@ -50,15 +46,9 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
     return next
   })
   const latestNote = [...(brief.history || [])].reverse().find((h) => h.note)
-  const previewNumber = isMonthlyNaming(brief) && (
-    !sameStrategist(brief.strategist, edit.strategist) || String(brief.date || '') !== String(edit.date || '')
-  )
-    ? nextMonthlyBatchNumber(briefs, edit.strategist, edit.date, { exceptId: brief.id })
-    : brief.briefNumber
-  const preview = displayCsName(
-    { ...brief, ...edit, briefNumber: previewNumber, nameIsCopy: false },
-    { preferStored: false }
-  )
+  const draft = { ...brief, ...edit, awarenessStage: edit.awareness }
+  const preview = displayName(draft)
+  const editorFilename = buildEditorFilename(draft)
 
   const save = () => {
     if (edit.strategist) onRememberName?.('strategist', edit.strategist)
@@ -81,12 +71,14 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
     <div className="overlay" onClick={onClose}>
       <div className="modal wide" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <h2 style={{ fontSize: 14, fontFamily: 'ui-monospace, monospace' }}>{brief.name}</h2>
+          <div className="modal-title-name">
+            <h2 style={{ fontSize: 14, fontFamily: 'ui-monospace, monospace' }}>{preview}</h2>
+            <CopyName value={preview} />
+            <CopyName value={editorFilename} label="Copy file" title="Copy editor filename" />
+          </div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
-          <CsName value={preview} />
-
           <div className="detail-grid">
             <div className="detail-item"><div className="k">Status</div>
               <div className="v" style={{ color: config.statuses[brief.status]?.color, fontWeight: 600 }}>
@@ -109,18 +101,23 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
             <Choices field="result" options={config.results} />
           </div>
 
-          <CreatableSelect
-            label="Creative Strategist"
-            value={edit.strategist}
-            options={strategistNames(config, briefs)}
-            onChange={(v) => set('strategist', v)}
-          />
-
-          <CreatableSelect
-            label={config.fieldLabels.editor}
-            value={edit.editor}
-            options={editorNames(config, briefs)}
-            onChange={(v) => set('editor', v || UNASSIGNED_EDITOR)}
+          <NamingFields
+            config={config}
+            briefs={briefs}
+            value={draft}
+            showPreview={false}
+            onChange={(next) => setEdit((e) => ({
+              ...e,
+              strategist: next.strategist,
+              editor: next.editor || UNASSIGNED_EDITOR,
+              hookNumber: next.hookNumber || 1,
+              type: next.type,
+              formatType: next.formatType,
+              funnel: next.funnel,
+              awareness: next.awareness || next.awarenessStage || '',
+              persona: next.persona,
+            }))}
+            onAddPerson={(role, name) => onRememberName?.(role === 'video_editor' ? 'editor' : 'strategist', name)}
           />
 
           <div className="field">
@@ -136,33 +133,6 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
           <div className="field">
             <label>{config.fieldLabels.adType}</label>
             <Choices field="adType" options={config.adTypes || AD_TYPES} />
-          </div>
-
-          <div className="field">
-            <label>{config.fieldLabels.type}</label>
-            <Choices field="type" options={config.types} />
-          </div>
-
-          <FormatTypeField
-            config={config}
-            format={edit.type}
-            value={edit.formatType}
-            onChange={(v) => set('formatType', v)}
-          />
-
-          <div className="field">
-            <label>{config.fieldLabels.funnel}</label>
-            <Choices field="funnel" options={config.funnels} />
-          </div>
-
-          <div className="field">
-            <label>{config.fieldLabels.awarenessStage}</label>
-            <Choices field="awareness" options={config.awarenessStages} />
-          </div>
-
-          <div className="field">
-            <label>{config.fieldLabels.persona}</label>
-            <Choices field="persona" options={config.personas} />
           </div>
 
           <div className="field">
@@ -252,10 +222,10 @@ export default function BriefDetail({ config, user, brief, briefs = [], onClose,
         </div>
         <div className="modal-foot" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button className="btn-primary" onClick={save}>Save Changes</button>
-          {onDuplicate && canCreateBriefs(user?.role) && (
+          {onDuplicate && canCreateBriefs(user?.role, config) && (
             <button className="btn-small" onClick={() => { onDuplicate(brief); onClose() }}>Duplicate</button>
           )}
-          {canDeleteBriefs(user?.role) && (
+          {canDeleteBriefs(user?.role, config) && (
             <button
               className="btn-small"
               style={{ color: '#E85040' }}

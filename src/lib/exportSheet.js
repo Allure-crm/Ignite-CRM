@@ -1,4 +1,4 @@
-import { monthLabel } from './helpers.js'
+import { briefAwareness, displayName, monthLabel } from './helpers.js'
 
 function csvEscape(value) {
   const s = String(value ?? '')
@@ -22,15 +22,13 @@ export function briefsToCsv(briefs, config) {
     '#',
     'Date',
     config.fieldLabels.launchedDate || 'Date Launched',
-    'Strategist',
     config.fieldLabels.csName || 'CS Name',
     config.fieldLabels.adName || 'Ad Name',
-    'Editor',
     'Format',
     'Format Type',
+    config.fieldLabels.adType || 'Ad Type',
     'Funnel',
     'Awareness',
-    config.fieldLabels.adType || 'Ad Type',
     'Persona',
     config.fieldLabels.page,
     config.fieldLabels.landingPage,
@@ -42,21 +40,19 @@ export function briefsToCsv(briefs, config) {
     'Status',
     'Result',
     'Learnings',
-    'Assigned To',
+    'Editor',
   ]
   const rows = briefs.map((b, i) => [
     b.briefNumber || i + 1,
     b.date || '',
     b.launchedDate || '',
     b.strategist || '',
-    b.name || '',
-    b.name || '',
-    b.editor || b.assignedTo || 'Unassigned',
+    displayName(b),
     b.type || '',
     b.formatType || '',
-    b.funnel || '',
-    b.awareness || '',
     b.adType || '',
+    b.funnel || '',
+    briefAwareness(b) || b.awarenessStage || '',
     b.persona || '',
     b.facebookPage || '',
     b.landingPage || '',
@@ -68,7 +64,7 @@ export function briefsToCsv(briefs, config) {
     config.statuses[b.status]?.label || b.status || '',
     b.result || '',
     b.learnings || '',
-    b.assignedTo || '',
+    b.editor || b.assignedTo || 'Unassigned',
   ])
   return '\uFEFF' + [headers, ...rows].map((row) => row.map(csvEscape).join(',')).join('\n')
 }
