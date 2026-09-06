@@ -5,7 +5,7 @@ console.assert = (cond, msg) => {
   origAssert(cond, msg)
   if (!cond) throw new Error(msg || 'assertion failed')
 }
-import { briefName, nextBriefNumber, applyTransition, mergedConfig, formatTypeOptions, formatTypeOptionsFor, importMissingBriefs, allowedTransitions, canCreateBriefs, canDeleteBriefs, buildCsName, applyNamingPatch, duplicateBrief, withCsName, matchesCsNameQuery, UNASSIGNED_EDITOR, defaultViewFor, isViewAllowed, roleQueue, weeksOverlappingMonth, formatByWeekMatrix, addMonths } from './src/lib/helpers.js'
+import { briefName, nextBriefNumber, nextMonthlyBatchNumber, applyTransition, mergedConfig, formatTypeOptions, formatTypeOptionsFor, importMissingBriefs, allowedTransitions, canCreateBriefs, canDeleteBriefs, buildCsName, buildMonthlyBatchName, applyNamingPatch, duplicateBrief, withCsName, matchesCsNameQuery, UNASSIGNED_EDITOR, NAMING_SCHEME_MONTHLY, defaultViewFor, isViewAllowed, roleQueue, weeksOverlappingMonth, formatByWeekMatrix, addMonths } from './src/lib/helpers.js'
 import { resolveSupabaseCreds, postgresUrl } from './src/lib/supabaseEnv.js'
 import { briefsToCsv } from './src/lib/exportSheet.js'
 import config from './src/brand.config.js'
@@ -24,7 +24,7 @@ while (b.status !== 'launched' && guard++ < 30) {
   b = applyTransition(b, t, { by: 'Test', assignTo: 'Editor' })
   path.push(b.status)
 }
-console.assert(b.status === 'launched' && b.launchedAt, 'happy path FAILED: ' + path.join('>'))
+console.assert(b.status === 'launched' && b.launchedAt && b.launchedDate, 'happy path FAILED: ' + path.join('>'))
 
 // script review: revision loop then assign editor
 let sr = applyTransition({ id: '2a', status: 'scripting', history: [] }, config.transitions.scripting[0], { by: 'T' })
@@ -91,7 +91,7 @@ console.assert(!canCreateBriefs('video_editor') && canCreateBriefs('creative_str
 console.assert(!canDeleteBriefs('video_editor') && canDeleteBriefs('operator'), 'delete briefs permission FAILED')
 console.assert(roleQueue(config, 'operator').length === 0, 'operator queue should be empty')
 console.assert(defaultViewFor(config, 'operator') === 'summary', 'operator default view FAILED')
-console.assert(isViewAllowed(config, 'operator', 'summary') && isViewAllowed(config, 'operator', 'all') && isViewAllowed(config, 'operator', 'launched') && isViewAllowed(config, 'operator', 'tracker') && isViewAllowed(config, 'operator', 'intake'), 'operator overview views FAILED')
+console.assert(isViewAllowed(config, 'operator', 'summary') && isViewAllowed(config, 'operator', 'output') && isViewAllowed(config, 'operator', 'all') && isViewAllowed(config, 'operator', 'launched') && isViewAllowed(config, 'operator', 'tracker') && isViewAllowed(config, 'operator', 'intake'), 'operator overview views FAILED')
 console.assert(!isViewAllowed(config, 'operator', 'scripting') && !isViewAllowed(config, 'operator', 'needs_editing'), 'operator must not land on queue lanes')
 console.assert(defaultViewFor(config, 'creative_strategist') === 'scripting', 'strategist default view FAILED')
 console.assert(isViewAllowed(config, 'creative_strategist', 'scripting') && isViewAllowed(config, 'video_editor', 'needs_editing'), 'queue views FAILED')
@@ -145,10 +145,25 @@ const assignedName = applyTransition(
 )
 console.assert(assignedName.editor === 'Zain' && assignedName.name.includes('Zain'), 'assign editor naming FAILED: ' + assignedName.name)
 
-const copied = duplicateBrief({ id: 'x', name: fullName, strategist: 'Tysin', editor: 'Marcus', type: 'Video', formatType: 'Celebrity NIL', funnel: 'TOF', awareness: 'Problem Aware', persona: 'Second-Act Single', angle: 'Celebrity Endorsement', status: 'launched', briefNumber: 9, history: [] }, { by: 'Mia', briefs: [{ briefNumber: 9 }] })
-console.assert(copied.name.endsWith(' - Copy') && copied.nameIsCopy && copied.strategist === 'Tysin', 'duplicate copy FAILED: ' + copied.name)
+const copied = duplicateBrief({ id: 'x', name: fullName, strategist: 'Tysin', editor: 'Marcus', type: 'Video', formatType: 'Celebrity NIL', funnel: 'TOF', awareness: 'Problem Aware', persona: 'Second-Act Single', angle: 'Celebrity Endorsement', status: 'launched', briefNumber: 9, date: '2026-09-05', history: [] }, { by: 'Mia', briefs: [{ briefNumber: 9 }] })
+console.assert(copied.namingScheme === NAMING_SCHEME_MONTHLY && copied.name === 'Tysin_Marcus_Sep_Batch_1 - Copy' && copied.nameIsCopy, 'duplicate copy FAILED: ' + copied.name)
 const afterEdit = applyNamingPatch(copied, { angle: 'New Angle' }, { by: 'Mia' })
-console.assert(!afterEdit.nameIsCopy && !afterEdit.name.endsWith(' - Copy'), 'copy suffix persist FAILED: ' + afterEdit.name)
+console.assert(!afterEdit.nameIsCopy && afterEdit.name === 'Tysin_Marcus_Sep_Batch_1', 'copy suffix persist FAILED: ' + afterEdit.name)
+
+const monthlyName = buildMonthlyBatchName({ strategist: 'Mia', editor: 'Zain', date: '2026-09-05', briefNumber: 2 })
+console.assert(monthlyName === 'Mia_Zain_Sep_Batch_2', 'monthly name FAILED: ' + monthlyName)
+const existingMonthly = [
+  { id: 'a', namingScheme: NAMING_SCHEME_MONTHLY, strategist: 'Mia', date: '2026-09-01', briefNumber: 1 },
+  { id: 'b', namingScheme: NAMING_SCHEME_MONTHLY, strategist: 'Mia', date: '2026-09-10', briefNumber: 2 },
+  { id: 'c', namingScheme: NAMING_SCHEME_MONTHLY, strategist: 'Mia', date: '2026-08-01', briefNumber: 9 },
+  { id: 'd', strategist: 'Mia', date: '2026-09-02', briefNumber: 40 },
+]
+console.assert(nextMonthlyBatchNumber(existingMonthly, 'Mia', '2026-09-20') === 3, 'monthly numbering must ignore legacy + other months')
+console.assert(nextMonthlyBatchNumber(existingMonthly, 'Zain', '2026-09-20') === 1, 'other CS should start at 1')
+const frozen = withCsName({ name: 'OLD_LONG_NAME', strategist: 'Mia', editor: 'Zain', type: 'Video', briefNumber: 40, date: '2026-09-05' })
+console.assert(frozen.name === 'OLD_LONG_NAME', 'legacy names must stay frozen: ' + frozen.name)
+const newMonthly = withCsName({ namingScheme: NAMING_SCHEME_MONTHLY, strategist: 'Mia', editor: 'Zain', date: '2026-09-05', briefNumber: 1, type: 'Video' })
+console.assert(newMonthly.name === 'Mia_Zain_Sep_Batch_1', 'new brief name FAILED: ' + newMonthly.name)
 
 const legacy = withCsName({ strategist: 'Mia', awarenessStage: 'TOF', type: 'Video', formatType: 'UGC' })
 console.assert(legacy.funnel === 'TOF' && legacy.awareness === '' && legacy.name.includes('TOF'), 'legacy funnel migrate FAILED: ' + legacy.name)

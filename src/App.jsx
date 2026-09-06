@@ -22,6 +22,7 @@ import SwitchUser from './components/SwitchUser'
 import Tracker from './components/Tracker'
 import WeeklyIntake from './components/WeeklyIntake'
 import Overview from './components/Overview'
+import CreativeOutput from './components/CreativeOutput'
 import AccessGate from './components/AccessGate'
 import BatchEditModal from './components/BatchEditModal'
 
@@ -196,7 +197,13 @@ export default function App() {
         isSupabase={isSupabase}
         storeError={storeError}
       />
-      {view === 'summary' ? (
+      {view === 'output' ? (
+        <CreativeOutput
+          config={config}
+          briefs={briefs}
+          onOpen={(brief) => setModal({ kind: 'detail', briefId: brief.id })}
+        />
+      ) : view === 'summary' ? (
         <Overview
           config={config}
           user={user}

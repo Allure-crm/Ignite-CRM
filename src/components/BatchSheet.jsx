@@ -9,18 +9,20 @@ const RESULT_COLORS = {
   'KPI Winner': '#8b5cf6',
 }
 
-export const BATCH_SHEET_COLUMNS = 21
+export const BATCH_SHEET_COLUMNS = 23
 
 const SORTABLE = [
   { key: 'briefNumber', label: '#' },
   { key: 'date', label: 'Date' },
-  { key: 'strategist', label: 'CS Name' },
-  { key: 'name', label: 'Ad Name' },
+  { key: 'launchedDate', label: 'Date Launched' },
+  { key: 'strategist', label: 'Strategist' },
+  { key: 'name', label: 'CS Name' },
   { key: 'editor', label: 'Editor' },
   { key: 'type', label: 'Format' },
   { key: 'formatType', label: 'Format Type' },
   { key: 'funnel', label: 'Funnel' },
   { key: 'awareness', label: 'Awareness' },
+  { key: 'adType', label: 'Ad Type' },
   { key: 'persona', label: 'Persona' },
 ]
 
@@ -78,15 +80,17 @@ export default function BatchSheet({
       )}
       <td className="tracker-td tracker-num">{b.briefNumber || i + 1}</td>
       <td className="tracker-td">{b.date || '—'}</td>
+      <td className="tracker-td">{b.launchedDate || '—'}</td>
       <td className="tracker-td tracker-cs">{b.strategist || '—'}</td>
       <td className="tracker-td tracker-ad-name" onClick={(e) => e.stopPropagation()}>
-        <CsName value={b.name} compact copyTitle="Copy Ad Name" />
+        <CsName value={b.name} compact copyTitle="Copy CS Name" />
       </td>
       <td className="tracker-td">{b.editor || b.assignedTo || 'Unassigned'}</td>
       <td className="tracker-td">{b.type || '—'}</td>
       <td className="tracker-td">{b.formatType || '—'}</td>
       <td className="tracker-td">{b.funnel || '—'}</td>
       <td className="tracker-td">{b.awareness || '—'}</td>
+      <td className="tracker-td">{b.adType || '—'}</td>
       <td className="tracker-td">{b.persona || '—'}</td>
       <td className="tracker-td">{b.facebookPage || '—'}</td>
       <td className="tracker-td">{b.landingPage || '—'}</td>
@@ -131,13 +135,15 @@ export default function BatchSheet({
             )}
             <Th col={{ key: 'briefNumber', label: '#' }} />
             <Th col={{ key: 'date', label: 'Date' }} />
-            <Th col={{ key: 'strategist', label: config.fieldLabels.csName || 'CS Name' }} />
-            <Th col={{ key: 'name', label: config.fieldLabels.adName || 'Ad Name' }} />
+            <Th col={{ key: 'launchedDate', label: config.fieldLabels.launchedDate || 'Date Launched' }} />
+            <Th col={{ key: 'strategist', label: 'Strategist' }} />
+            <Th col={{ key: 'name', label: config.fieldLabels.csName || 'CS Name' }} />
             <Th col={{ key: 'editor', label: 'Editor' }} />
             <Th col={{ key: 'type', label: 'Format' }} />
             <Th col={{ key: 'formatType', label: 'Format Type' }} />
             <Th col={{ key: 'funnel', label: 'Funnel' }} />
             <Th col={{ key: 'awareness', label: 'Awareness' }} />
+            <Th col={{ key: 'adType', label: config.fieldLabels.adType || 'Ad Type' }} />
             <Th col={{ key: 'persona', label: 'Persona' }} />
             <th className="tracker-th">{config.fieldLabels.page}</th>
             <th className="tracker-th">{config.fieldLabels.landingPage}</th>

@@ -16,14 +16,15 @@ export default function BriefCard({ brief, config, user, onOpen, onAction }) {
         </div>
         <span className="badge type">{brief.type}</span>
       </div>
-      {brief.angle && <div className="card-angle">{brief.angle}</div>}
+      {brief.adConcept && <div className="card-angle">{brief.adConcept}</div>}
+      {brief.angle && <div className="card-angle-preview">{brief.angle}</div>}
       {latestNote && brief.status === 'script_revision' && (
         <div className="card-note">“{latestNote}”</div>
       )}
       <div className="pills">
         <span className="pill stage">{brief.awarenessStage}</span>
         {brief.formatType && <span className="pill">{brief.formatType}</span>}
-        {brief.persona && <span className="pill">Persona {brief.persona}</span>}
+        {brief.adType && <span className="pill">{brief.adType}</span>}
         <span className="pill" style={{ color: config.statuses[brief.status]?.color }}>
           {config.statuses[brief.status]?.label}
         </span>
@@ -33,7 +34,7 @@ export default function BriefCard({ brief, config, user, onOpen, onAction }) {
           {brief.strategist}
           {brief.assignedTo ? ` → ${brief.assignedTo}` : ''}
         </span>
-        <span>{fmtDate(brief.date)}</span>
+        <span>{brief.launchedDate ? `Launched ${fmtDate(brief.launchedDate)}` : fmtDate(brief.date)}</span>
       </div>
       <div className="chips">
         {brief.facebookPage && <span className="chip" title={brief.facebookPage}>{brief.facebookPage}</span>}

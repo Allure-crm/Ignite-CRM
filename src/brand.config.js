@@ -39,8 +39,9 @@ export default {
     media_buyer:         { label: 'Media Buyer',         queue: ['ready_to_launch'] },
   },
 
-  // Ad Name convention: fields joined with `_`, then the unique batch number
-  // e.g. "Mia_Unassigned_Video_UGC_TOF_Unaware_General_Angle_1"
+  // New briefs: Strategist_Editor_Mon_Batch_N
+  // N restarts at 1 each month, per creative strategist.
+  // Existing briefs keep their original names.
 
   // ---- Brief fields (option lists; editable in Manage Lists) --------
   fieldLabels: {
@@ -55,6 +56,8 @@ export default {
     landingPage: 'Landing Page',
     adConcept: 'Ad Concept',
     angle: 'Angle',
+    adType: 'Ad Type',
+    launchedDate: 'Date Launched',
     formatType: 'Format Type',
     postId: 'Post ID',
     learnings: 'Learnings',
@@ -75,6 +78,7 @@ export default {
   extraStrategists: [],
   extraEditors: [],
   extraAngles: [],
+  adTypes: ['Net New', 'Iteration', 'Imitation'],
   formatTypes: [
     'UGC',
     'VSL',

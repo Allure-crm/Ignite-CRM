@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   UNASSIGNED_EDITOR,
-  applyNamingPatch,
-  angleOptions,
+  applyNamingPatches,
   batchNamingPreview,
   editorNames,
   formatTypeOptionsFor,
@@ -28,8 +27,8 @@ export default function BatchEditModal({ config, briefs, selected, onClose, onAp
   })
 
   const preview = useMemo(
-    () => batchNamingPreview(targets, patch, { config }),
-    [targets, patch, config]
+    () => batchNamingPreview(targets, patch, { config, briefs }),
+    [targets, patch, config, briefs]
   )
   const hasPatch = Object.keys(patch).length > 0
   const changed = preview.filter((row) => row.oldName !== row.newName)
@@ -42,7 +41,7 @@ export default function BatchEditModal({ config, briefs, selected, onClose, onAp
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
-          <p className="batch-help">Leave a field on “Keep current” to skip it. Ad Name regenerates for every affected brief and keeps its unique batch number (1, 2, 3…) so names cannot collide.</p>
+          <p className="batch-help">Leave a field on “Keep current” to skip it. New briefs use CS_Editor_Month_Batch_# (per strategist, resets each month). Existing briefs keep their original naming scheme.</p>
 
           <div className="batch-fields">
             <FieldSelect
@@ -94,25 +93,27 @@ export default function BatchEditModal({ config, briefs, selected, onClose, onAp
               onChange={(v) => set('persona', v)}
               options={config.personas}
             />
+            <FieldSelect
+              label={config.fieldLabels.adType}
+              value={patch.adType ?? EMPTY}
+              onChange={(v) => set('adType', v)}
+              options={config.adTypes || []}
+            />
             <div className="field">
               <label>{config.fieldLabels.angle}</label>
-              <input
-                type="text"
-                list="batch-angle-options"
-                placeholder="Keep current, or type a new angle"
+              <textarea
+                placeholder="Keep current, or paste a new write-up"
                 value={patch.angle ?? ''}
                 onChange={(e) => set('angle', e.target.value === '' ? EMPTY : e.target.value)}
+                rows={4}
               />
-              <datalist id="batch-angle-options">
-                {angleOptions(config, briefs).map((o) => <option key={o} value={o} />)}
-              </datalist>
             </div>
           </div>
 
           <div className="batch-preview">
             <h3>Confirmation preview</h3>
             {!hasPatch && <div className="field-hint">Choose at least one field to see name changes.</div>}
-            {hasPatch && changed.length === 0 && <div className="field-hint">No CS names would change.</div>}
+            {hasPatch && changed.length === 0 && <div className="field-hint">Fields will update. CS names stay the same.</div>}
             {changed.map((row) => (
               <div className="batch-preview-row" key={row.id}>
                 <span className="old">{row.oldName || '(untitled)'}</span>
@@ -125,11 +126,11 @@ export default function BatchEditModal({ config, briefs, selected, onClose, onAp
         <div className="modal-foot" style={{ display: 'flex', gap: 10 }}>
           <button
             className="btn-primary"
-            disabled={!hasPatch || changed.length === 0}
-            style={{ opacity: hasPatch && changed.length ? 1 : 0.45 }}
-            onClick={() => onApply(changed.map((row) => applyNamingPatch(targets.find((b) => b.id === row.id), patch, { config, by: user?.name })))}
+            disabled={!hasPatch}
+            style={{ opacity: hasPatch ? 1 : 0.45 }}
+            onClick={() => onApply(applyNamingPatches(targets, patch, { config, by: user?.name, briefs }))}
           >
-            Apply to {changed.length} brief{changed.length === 1 ? '' : 's'}
+            Apply to {targets.length} brief{targets.length === 1 ? '' : 's'}
           </button>
           <button className="btn-small" onClick={onClose}>Cancel</button>
         </div>
