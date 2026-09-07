@@ -21,7 +21,7 @@ export default function Sidebar({ config, user, view, briefs, onView, onNewBrief
         </div>
       </div>
 
-      {canCreateBriefs(user.role) && (
+      {canCreateBriefs(user.role, config) && (
         <button className="btn-primary" onClick={onNewBrief}>+ New Brief</button>
       )}
 
@@ -48,7 +48,7 @@ export default function Sidebar({ config, user, view, briefs, onView, onNewBrief
           ▤ Summary
         </button>
         <button className={`nav-item ${view === 'output' ? 'active' : ''}`} onClick={() => onView('output')}>
-          ◈ Creative Output
+          ▦ Creative Output
         </button>
         <button className={`nav-item ${view === 'all' ? 'active' : ''}`} onClick={() => onView('all')}>
           ▦ All Briefs <span className="count">{briefs.length}</span>

@@ -105,41 +105,47 @@ export function isMonthlyNaming(brief = {}) {
 }
 
 export function monthAbbrev(d) {
-  const key = monthKey(d)
-  const m = Number(String(key).slice(5, 7))
-  return MONTHS[m - 1] || ''
+  const dt = parseDay(d)
+  return dt ? MONTHS[dt.getMonth()] : ''
 }
 
 export function sameStrategist(a, b) {
   return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase()
 }
 
-export function nextMonthlyBatchNumber(briefs, strategist, date, { exceptId } = {}) {
-  const ym = monthKey(date)
-  if (!ym || !String(strategist || '').trim()) return 1
-  let max = 0
-  for (const brief of briefs || []) {
-    if (exceptId && brief.id === exceptId) continue
-    if (!isMonthlyNaming(brief)) continue
-    if (!sameStrategist(brief.strategist, strategist)) continue
-    if (monthKey(brief.date) !== ym) continue
-    const n = Number(brief.briefNumber)
-    if (Number.isFinite(n) && n > max) max = n
-  }
-  return max + 1
+export function editorForName(source = {}) {
+  const editor = String(source.editor || '').trim() || briefEditor(source)
+  if (!editor || editor === UNASSIGNED_EDITOR) return ''
+  return editor
+}
+
+export function hookNumber(source = {}) {
+  const n = Number(source.hookNumber)
+  return Number.isInteger(n) && n > 0 ? n : 1
+}
+
+export function launchedDateOf(brief = {}) {
+  if (brief.launchedDate) return brief.launchedDate
+  if (typeof brief.launchedAt === 'number' && brief.launchedAt) return toDayKey(new Date(brief.launchedAt))
+  return ''
+}
+
+export function nextStrategistNumber(briefs, strategist, { exceptId } = {}) {
+  const name = String(strategist || '').trim()
+  const pool = (briefs || []).filter((brief) => {
+    if (exceptId && brief.id === exceptId) return false
+    if (!name) return true
+    return String(brief.strategist || '').trim() === name
+  })
+  return pool.reduce((max, brief) => Math.max(max, brief.briefNumber || 0), 0) + 1
+}
+
+export function nextMonthlyBatchNumber(briefs, strategist, date, opts = {}) {
+  return nextStrategistNumber(briefs, strategist, opts)
 }
 
 export function buildMonthlyBatchName(source = {}, { copy = false } = {}) {
-  const strategist = sanitize(source.strategist) || String(source.strategist || '').trim()
-  const editor = sanitize(source.editor) || String(source.editor || '').trim() || UNASSIGNED_EDITOR
-  const mon = monthAbbrev(source.date)
-  const number = csNameNumber(source)
-  const parts = [strategist, editor, mon].filter(Boolean)
-  if (number) parts.push(`Batch_${number}`)
-  else if (strategist || editor || mon) parts.push('Batch')
-  const core = parts.join('_')
-  if (!core) return copy ? COPY_SUFFIX.trim() : ''
-  return copy ? `${core}${COPY_SUFFIX}` : core
+  return buildCsName(source, { copy })
 }
 
 export function csNameNumber(source = {}) {
@@ -168,9 +174,26 @@ export function csNameParts(source = {}) {
 }
 
 export function buildCsName(source = {}, { copy = false } = {}) {
-  const core = csNameParts(source).join('_')
+  const parts = [
+    String(source.strategist || '').trim(),
+    editorForName(source),
+    monthAbbrev(source.date),
+  ].filter(Boolean)
+  const number = csNameNumber(source)
+  if (number) parts.push(String(number))
+  const core = parts.join('_')
   if (!core) return copy ? COPY_SUFFIX.trim() : ''
   return copy ? `${core}${COPY_SUFFIX}` : core
+}
+
+export function buildEditorFilename(source = {}) {
+  const cs = buildCsName(source)
+  return cs ? `${cs}_Hook_${hookNumber(source)}` : ''
+}
+
+export function displayName(brief = {}) {
+  if (brief.nameIsCopy && brief.name) return brief.name
+  return buildCsName(brief) || brief.name || ''
 }
 
 // Legacy helper kept for older tests/callers — CS names are field-driven.
@@ -192,39 +215,35 @@ export function isFormatTypeValid(config, format, formatType) {
   return formatTypeOptionsFor(config, format).some((option) => option.toLowerCase() === String(formatType).toLowerCase())
 }
 
-export function displayCsName(brief, { copy, preferStored = true } = {}) {
-  const fields = namingFields(brief)
-  if (isMonthlyNaming(brief)) {
-    return buildMonthlyBatchName({
-      ...fields,
-      date: brief.date,
-      briefNumber: brief.briefNumber,
-    }, { copy })
-  }
-  if (preferStored && brief?.name && !copy) return brief.name
-  return buildCsName({ ...fields, briefNumber: brief.briefNumber }, { copy })
+export function displayCsName(brief, { copy, preferStored = false } = {}) {
+  if (preferStored && brief?.nameIsCopy && brief?.name && !copy) return brief.name
+  return buildCsName({
+    ...brief,
+    ...namingFields(brief),
+    date: brief.date,
+    briefNumber: brief.briefNumber,
+  }, { copy })
 }
 
 export function withCsName(brief, { copy } = {}) {
   const fields = namingFields(brief)
   const isCopy = copy ?? Boolean(brief?.nameIsCopy)
-  const monthly = isMonthlyNaming(brief)
-  return {
+  const next = {
     ...brief,
     ...fields,
     awarenessStage: fields.awareness || brief?.awarenessStage || '',
-    namingScheme: monthly ? NAMING_SCHEME_MONTHLY : brief.namingScheme,
-    name: monthly
-      ? buildMonthlyBatchName({ ...fields, date: brief.date, briefNumber: brief.briefNumber }, { copy: isCopy })
-      : (brief.name || buildCsName({ ...fields, briefNumber: brief.briefNumber }, { copy: isCopy })),
+    hookNumber: hookNumber(brief),
+    launchedDate: launchedDateOf(brief) || brief.launchedDate || '',
     nameIsCopy: isCopy,
   }
+  if (isCopy && brief.name) next.name = brief.name
+  else next.name = buildCsName({ ...next, date: brief.date, briefNumber: brief.briefNumber }, { copy: isCopy })
+  return next
 }
 
-export function applyNamingPatch(brief, patch, { by, config, briefs = [] } = {}) {
+export function applyNamingPatch(brief, patch, { by, config } = {}) {
   const now = Date.now()
   const prevEditor = briefEditor(brief)
-  const prevFields = namingFields(brief)
   let next = { ...brief, ...patch, updatedAt: now }
   if (patch.type && patch.type !== brief.type && patch.formatType === undefined) {
     next.formatType = ''
@@ -232,27 +251,13 @@ export function applyNamingPatch(brief, patch, { by, config, briefs = [] } = {})
   if (config && next.formatType && !isFormatTypeValid(config, next.type, next.formatType)) {
     next.formatType = ''
   }
-  if (isMonthlyNaming(brief) || isMonthlyNaming(next)) {
-    next.namingScheme = NAMING_SCHEME_MONTHLY
-    const dateChanged = String(brief.date || '') !== String(next.date || '')
-    const csChanged = !sameStrategist(brief.strategist, next.strategist)
-    if (dateChanged || csChanged) {
-      next.briefNumber = nextMonthlyBatchNumber(briefs, next.strategist, next.date, { exceptId: brief.id })
-    }
-  }
-  const nextFields = namingFields(next)
-  const namingChanged = JSON.stringify(prevFields) !== JSON.stringify(nextFields)
-    || String(brief.date || '') !== String(next.date || '')
+  const editorChanged = editorForName(brief) !== editorForName(next) || briefEditor(brief) !== briefEditor(next)
+  const coreChanged = !sameStrategist(brief.strategist, next.strategist)
+    || editorChanged
+    || monthAbbrev(brief.date) !== monthAbbrev(next.date)
     || Number(brief.briefNumber) !== Number(next.briefNumber)
-  const isCopy = namingChanged ? false : Boolean(brief.nameIsCopy)
-  if (!isMonthlyNaming(next) && namingChanged) {
-    next = {
-      ...next,
-      name: buildCsName({ ...nextFields, briefNumber: next.briefNumber }, { copy: isCopy }),
-      nameIsCopy: isCopy,
-    }
-  }
-  next = withCsName({ ...next, nameIsCopy: isCopy }, { copy: isCopy })
+  if (coreChanged) next.nameIsCopy = false
+  next = withCsName(next)
   const history = [...(brief.history || [])]
   if (next.editor && next.editor !== prevEditor) {
     history.push({
@@ -283,11 +288,12 @@ export function applyNamingPatches(targets, patch, { by, config, briefs = [] } =
 export function duplicateBrief(brief, { by, briefs = [] } = {}) {
   const now = Date.now()
   const date = brief.date || todayKey()
-  const copy = withCsName({
+  const briefNumber = nextStrategistNumber(briefs, brief.strategist)
+  const name = `${buildCsName({ ...brief, date, briefNumber })}${COPY_SUFFIX}`
+  return withCsName({
     ...brief,
     id: uuid(),
-    namingScheme: NAMING_SCHEME_MONTHLY,
-    briefNumber: nextMonthlyBatchNumber(briefs, brief.strategist, date),
+    briefNumber,
     date,
     createdAt: now,
     updatedAt: now,
@@ -297,11 +303,10 @@ export function duplicateBrief(brief, { by, briefs = [] } = {}) {
     result: '',
     postId: '',
     learnings: brief.learnings || '',
+    name,
     nameIsCopy: true,
-    name: '',
-    history: [{ status: 'scripting', by: by || 'System', at: now, note: `Duplicated from ${brief.name || 'brief'}` }],
+    history: [{ status: 'scripting', by: by || 'System', at: now, note: `Duplicated from ${displayName(brief)}` }],
   }, { copy: true })
-  return copy
 }
 
 export function batchNamingPreview(targets, patch, { config, briefs = [] } = {}) {
@@ -341,7 +346,7 @@ export function angleOptions(config, briefs = []) {
 
 export function csNameSearchHaystack(brief) {
   const fields = namingFields(brief)
-  return [displayCsName(brief), buildMonthlyBatchName({ ...fields, date: brief.date, briefNumber: brief.briefNumber }), buildCsName({ ...fields, briefNumber: brief.briefNumber }), brief.name, ...Object.values(fields), brief.briefNumber]
+  return [displayName(brief), buildCsName({ ...brief, ...fields }), buildEditorFilename(brief), brief.name, brief.strategist, ...Object.values(fields), brief.briefNumber]
     .filter(Boolean)
     .join(' ')
     .toLowerCase()
@@ -597,11 +602,15 @@ export function isViewAllowed(config, role, view) {
   return roleQueue(config, role).includes(view)
 }
 
-export function canCreateBriefs(role) {
+export function canCreateBriefs(role, config) {
+  const flag = config?.roles?.[role]?.canCreateBriefs
+  if (typeof flag === 'boolean') return flag
   return role !== 'video_editor'
 }
 
-export function canDeleteBriefs(role) {
+export function canDeleteBriefs(role, config) {
+  const flag = config?.roles?.[role]?.canDeleteBriefs
+  if (typeof flag === 'boolean') return flag
   return role !== 'video_editor'
 }
 

@@ -41,7 +41,7 @@ export default function BatchEditModal({ config, briefs, selected, onClose, onAp
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
-          <p className="batch-help">Leave a field on “Keep current” to skip it. New briefs use CS_Editor_Month_Batch_# (per strategist, resets each month). Existing briefs keep their original naming scheme.</p>
+          <p className="batch-help">Leave a field on “Keep current” to skip it. Ad names use CS_Editor_Mon_# (lifetime per strategist; editor is omitted when Unassigned). Editor files add _Hook_#.</p>
 
           <div className="batch-fields">
             <FieldSelect
